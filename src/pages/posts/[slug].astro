@@ -14,15 +14,15 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<BaseLayout title={`${post.data.title} | zachsBlog`} description={post.data.description}>
-  <main class="container" style="padding: 3.5rem 0 4.5rem;">
-    <article class="card" style="padding: 2rem;">
-      <p style="margin: 0 0 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.78rem;">
+<BaseLayout title={`${post.data.title} | Olinske`} description={post.data.description}>
+  <main class="container site-shell">
+    <article class="panel article fade-in">
+      <p class="eyebrow">
         {post.data.publishDate.toISOString().slice(0, 10)}
       </p>
-      <h1 style="margin-top: 0;">{post.data.title}</h1>
-      <p style="color: var(--muted);">{post.data.description}</p>
-      <hr style="border: 0; border-top: 1px solid rgba(22, 32, 24, 0.12); margin: 1.5rem 0;" />
+      <h1>{post.data.title}</h1>
+      <p class="hero-subtitle">{post.data.description}</p>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;" />
       <Content />
     </article>
   </main>
