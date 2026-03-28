@@ -42,7 +42,33 @@ const publishedPosts = (await getCollection('posts', ({ data }) => data.status =
           <li>Research, draft, and review helper agents</li>
           <li>LinkedIn-first distribution playbook</li>
         </ul>
+
+        <h2 style="margin-top: 1.2rem;">Theme Lab</h2>
+        <div class="theme-lab">
+          <a class="theme-link" href="/?theme=executive">
+            <strong>Executive Editorial</strong>
+            <span>Warm premium tone, high trust, boardroom readability.</span>
+          </a>
+          <a class="theme-link" href="/?theme=operator">
+            <strong>Operator Blueprint</strong>
+            <span>Cool analytical feel, technical clarity, execution-first.</span>
+          </a>
+          <a class="theme-link" href="/?theme=horizon">
+            <strong>Strategic Horizon</strong>
+            <span>Forward-looking narrative style with strong visual warmth.</span>
+          </a>
+        </div>
       </aside>
+    </section>
+
+    <section class="panel section fade-in fade-delay-2" style="margin-top: 1.1rem;">
+      <h2>CTO Return Criteria</h2>
+      <ul class="criteria-list">
+        <li>Can skim key ideas in under 90 seconds.</li>
+        <li>Every post has one concrete framework or decision model.</li>
+        <li>Visual tone feels credible, calm, and non-gimmicky.</li>
+        <li>Navigation makes it obvious what to read next.</li>
+      </ul>
     </section>
   </main>
 </BaseLayout>
