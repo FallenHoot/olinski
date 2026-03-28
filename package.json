@@ -1,0 +1,28 @@
+{
+  "name": "zachsblog",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "check:content": "node scripts/validate-content.mjs",
+    "check:content:review": "node scripts/validate-content.mjs --gate=review",
+    "check:content:publish": "node scripts/validate-content.mjs --gate=publish",
+    "check:agent-artifacts": "node scripts/validate-agent-artifacts.mjs",
+    "export:public": "node scripts/export-public-repo.mjs",
+    "ci:draft": "npm run check && npm run check:content && npm run build",
+    "ci:review": "npm run ci:draft && npm run check:content:review",
+    "ci:publish": "npm run ci:review && npm run check:content:publish && npm run check:agent-artifacts"
+  },
+  "dependencies": {
+    "astro": "^5.6.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.8",
+    "gray-matter": "^4.0.3",
+    "typescript": "^5.9.3"
+  }
+}
