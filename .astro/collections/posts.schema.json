@@ -1,0 +1,64 @@
+{
+  "$ref": "#/definitions/posts",
+  "definitions": {
+    "posts": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 5
+        },
+        "description": {
+          "type": "string",
+          "minLength": 20
+        },
+        "publishDate": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "integer",
+              "format": "unix-time"
+            }
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "backlog",
+            "research",
+            "draft",
+            "review",
+            "approved",
+            "scheduled",
+            "published"
+          ]
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "publishDate",
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
