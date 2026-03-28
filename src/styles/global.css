@@ -18,7 +18,7 @@
 }
 
 /* Technical: Cool, precise, engineer-friendly */
-body[data-theme="technical"] {
+html[data-theme="technical"] {
   --bg: #f0f5f9;
   --bg-deep: #d8e5f0;
   --surface: #fafbfc;
@@ -37,7 +37,7 @@ body[data-theme="technical"] {
 }
 
 /* Forward: Bold, modern, generous whitespace */
-body[data-theme="forward"] {
+html[data-theme="forward"] {
   --bg: #faf8f6;
   --bg-deep: #f0e6de;
   --surface: #fffbf9;
@@ -56,7 +56,7 @@ body[data-theme="forward"] {
 }
 
 /* Clarity: Minimal, high-contrast, accessibility-first */
-body[data-theme="clarity"] {
+html[data-theme="clarity"] {
   --bg: #f9f7f5;
   --bg-deep: #e6dcd3;
   --surface: #fffffe;
@@ -75,7 +75,7 @@ body[data-theme="clarity"] {
 }
 
 /* Craft: Warm, creative, personality-driven */
-body[data-theme="craft"] {
+html[data-theme="craft"] {
   --bg: #fdf6f1;
   --bg-deep: #f1dfd4;
   --surface: #fffdfb;
@@ -94,7 +94,7 @@ body[data-theme="craft"] {
 }
 
 /* Operator (preserved) */
-body[data-theme="operator"] {
+html[data-theme="operator"] {
   --bg: #eef4f6;
   --bg-deep: #dbe7eb;
   --surface: #f9fcfd;
@@ -112,7 +112,7 @@ body[data-theme="operator"] {
 }
 
 /* Horizon (preserved) */
-body[data-theme="horizon"] {
+html[data-theme="horizon"] {
   --bg: #f8f2ef;
   --bg-deep: #ead8d3;
   --surface: #fffaf8;
