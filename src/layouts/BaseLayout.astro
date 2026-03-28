@@ -23,7 +23,8 @@ const { title, description = 'Olinske by Zach Olinske. Signal Over Hype for ente
       const saved = localStorage.getItem('theme') || 'executive';
       const url = new URL(window.location);
       const param = url.searchParams.get('theme');
-      const theme = param && ['executive', 'operator', 'horizon'].includes(param) ? param : saved;
+      const validThemes = ['executive', 'technical', 'forward', 'clarity', 'craft', 'operator', 'horizon'];
+      const theme = param && validThemes.includes(param) ? param : saved;
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('theme', theme);
     </script>
