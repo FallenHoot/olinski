@@ -6,19 +6,20 @@ const posts = (await getCollection('posts', ({ data }) => data.status === 'publi
   .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
 ---
 
-<BaseLayout title="Posts | zachsBlog" description="Published and scheduled posts from zachsBlog.">
-  <main class="container" style="padding: 3.5rem 0 4.5rem;">
-    <section class="card" style="padding: 2rem;">
-      <h1 style="margin-top: 0;">Posts</h1>
+<BaseLayout title="Posts | Olinske" description="Published and scheduled posts from Olinske.">
+  <main class="container site-shell">
+    <section class="panel section fade-in">
+      <p class="eyebrow">Archive</p>
+      <h1>Posts</h1>
       {
         posts.length === 0 ? (
-          <p style="margin: 0; color: var(--muted);">No published posts yet.</p>
+          <p class="post-meta">No published posts yet.</p>
         ) : (
-          <ul>
+          <ul class="post-list">
             {posts.map((post) => (
               <li>
                 <a href={`/posts/${post.id.replace(/\.md$/, '')}/`}>{post.data.title}</a>
-                <span style="color: var(--muted);"> - {post.data.publishDate.toISOString().slice(0, 10)}</span>
+                <div class="post-meta">{post.data.publishDate.toISOString().slice(0, 10)}</div>
               </li>
             ))}
           </ul>
