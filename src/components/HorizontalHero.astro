@@ -32,9 +32,14 @@ const displayCards = cards.length
     <div class="vignette"></div>
   </div>
 
+  <!-- Reading progress line -->
+  <div class="progress-rail" aria-hidden="true">
+    <div class="progress-fill" data-progress-fill></div>
+  </div>
+
   <!-- Panel 1: Wisconsin / Foundry -->
   <section class="story-panel" data-panel="wi">
-    <div class="panel-content">
+    <div class="panel-content glass-tray">
       <p class="panel-kicker">ORIGIN · US NORTH CENTRAL</p>
       <h2>Northern Roots.</h2>
       <p class="panel-body">
@@ -48,7 +53,7 @@ const displayCards = cards.length
 
   <!-- Panel 2: Mountains / The Crossing -->
   <section class="story-panel" data-panel="no">
-    <div class="panel-content">
+    <div class="panel-content glass-tray">
       <p class="panel-kicker">THE CROSSING · THE ATLANTIC</p>
       <h2>The Crossing.</h2>
       <p class="panel-body">
@@ -60,7 +65,22 @@ const displayCards = cards.length
 
   <!-- Panel 3: Oslo / Destination -->
   <section class="story-panel" data-panel="os">
-    <div class="panel-content">
+    <!-- Blueprint grid overlay -->
+    <div class="blueprint-overlay" aria-hidden="true">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="bp-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(77,163,255,0.12)" stroke-width="0.5"/>
+          </pattern>
+          <pattern id="bp-grid-major" width="200" height="200" patternUnits="userSpaceOnUse">
+            <path d="M 200 0 L 0 0 0 200" fill="none" stroke="rgba(77,163,255,0.22)" stroke-width="0.8"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#bp-grid)"/>
+        <rect width="100%" height="100%" fill="url(#bp-grid-major)"/>
+      </svg>
+    </div>
+    <div class="panel-content glass-tray">
       <p class="panel-kicker">DESTINATION · NORWAY EAST (OSLO)</p>
       <h2>Oslo Monolith.</h2>
       <p class="panel-body">
@@ -115,9 +135,10 @@ const displayCards = cards.length
     transition: filter 260ms ease;
   }
 
-  /* First image starts visible */
+  /* First image starts visible — nostalgic grain + sepia */
   .image-layer[data-img="wi"] {
     opacity: 1;
+    filter: brightness(0.52) sepia(0.18) saturate(0.92);
   }
 
   .vignette {
@@ -143,6 +164,46 @@ const displayCards = cards.length
     padding: 2rem;
     position: relative;
     z-index: 2;
+  }
+
+  /* Glass text tray */
+  .glass-tray {
+    background: rgba(10, 18, 34, 0.2);
+    border: 1px solid rgba(200, 220, 255, 0.14);
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  }
+
+  /* Blueprint grid overlay for Oslo */
+  .blueprint-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.6;
+    mix-blend-mode: screen;
+  }
+
+  /* Reading progress rail */
+  .progress-rail {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 100vh;
+    z-index: 60;
+    background: rgba(120, 150, 180, 0.15);
+    pointer-events: none;
+  }
+
+  .progress-fill {
+    width: 100%;
+    height: 0%;
+    background: var(--accent, #ff6b35);
+    transition: height 80ms linear;
+    box-shadow: 0 0 8px var(--accent, #ff6b35);
   }
 
   .panel-kicker {
@@ -265,4 +326,39 @@ const displayCards = cards.length
 <script>
   import { initMonolithScroll } from '../scripts/gsap-horizontal-monolith';
   initMonolithScroll();
+
+  // ── Reading progress bar ──────────────────────────────────────────
+  const progressFill = document.querySelector<HTMLElement>('[data-progress-fill]');
+  const root = document.querySelector<HTMLElement>('[data-story-root]');
+
+  // ── Scroll-bound image filters ────────────────────────────────────
+  const wiLayer = document.querySelector<HTMLElement>('[data-img="wi"]');
+  const noLayer = document.querySelector<HTMLElement>('[data-img="no"]');
+
+  const onScroll = () => {
+    if (!root) return;
+    const progress = parseFloat(root.style.getPropertyValue('--story-progress') || '0');
+
+    // Update progress bar height
+    if (progressFill) {
+      progressFill.style.height = `${(progress * 100).toFixed(1)}%`;
+    }
+
+    // Wisconsin: deepen sepia as user leaves
+    if (wiLayer && wiLayer.style.opacity !== '0') {
+      const sepiaAmount = 0.18 + progress * 0.25;
+      wiLayer.style.filter = `brightness(0.52) sepia(${sepiaAmount.toFixed(2)}) saturate(0.92)`;
+    }
+
+    // Norway: increase saturation as user scrolls through
+    if (noLayer && noLayer.style.opacity !== '0') {
+      const sat = 1.0 + progress * 0.4;
+      noLayer.style.filter = `brightness(0.55) saturate(${sat.toFixed(2)})`;
+    }
+  };
+
+  let raf = 0;
+  const tick = () => { onScroll(); raf = requestAnimationFrame(tick); };
+  raf = requestAnimationFrame(tick);
+  window.addEventListener('pagehide', () => cancelAnimationFrame(raf));
 </script>
