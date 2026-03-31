@@ -3,12 +3,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import HorizontalHero from '../components/HorizontalHero.astro';
 import { getCollection } from 'astro:content';
 
-// Era 1: 1500s — tall ships / old maps
-const img_1500s = '/images/1500s-voyage.jpg';
-// Era 2: 1900s — steamship / Wisconsin settlement
-const img_1900s = '/images/1900s-steamship.jpg';
-// Era 3: Modern — Oslo skyline / Barcode district
-const img_oslo = '/images/oslo-skyline.jpg';
+// ── The three anchors ──────────────────────────────────────────────
+const img_farm = '/images/wisconsin-farm.jpg';         // Origin: Wisconsin farm
+const img_oslo = '/images/oslo-skyline.jpg';           // Destination: Oslo skyline
+
+// ── The voyage montage (transition images between farm and Oslo) ──
+const voyage = [
+  '/images/1500s-colonial-ship.jpg',    // Colonial ship
+  '/images/1700s-sailing-ships.jpg',    // Sailing warship sketch
+  '/images/1800s-clipper-ship.jpg',     // Clipper under full sail
+  '/images/1900s-steamship.jpg',        // Steamship with gold funnels
+  '/images/2014-sas-flight.jpg',        // SAS 737 to Norway
+];
 
 const posts = (
   await getCollection('posts', ({ data }) =>
@@ -25,5 +31,10 @@ const posts = (
 ---
 
 <BaseLayout title="Olinske | Signal Over Hype">
-  <HorizontalHero img_wisconsin={img_1500s} img_mountains={img_1900s} img_oslo={img_oslo} cards={posts} />
+  <HorizontalHero
+    img_farm={img_farm}
+    img_oslo={img_oslo}
+    voyage={voyage}
+    cards={posts}
+  />
 </BaseLayout>

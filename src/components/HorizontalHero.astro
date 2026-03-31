@@ -6,13 +6,13 @@ interface Card {
 }
 
 interface Props {
-  img_wisconsin: string;  // Era 1: 1500s voyage
-  img_mountains: string;  // Era 2: 1900s migration
-  img_oslo: string;       // Era 3: Modern Oslo
+  img_farm: string;
+  img_oslo: string;
+  voyage?: string[];
   cards?: Card[];
 }
 
-const { img_wisconsin, img_mountains, img_oslo, cards = [] } = Astro.props;
+const { img_farm, img_oslo, voyage = [], cards = [] } = Astro.props;
 
 const displayCards = cards.length
   ? cards.slice(0, 3)
@@ -26,8 +26,10 @@ const displayCards = cards.length
 <div class="montage" data-story-root>
   <!-- ═══ Fixed cinematic stage ═══════════════════════════════════ -->
   <div class="stage">
-    <div class="layer layer-1500" style={`background-image: url(${img_wisconsin})`}></div>
-    <div class="layer layer-1900" style={`background-image: url(${img_mountains})`}></div>
+    <div class="layer layer-farm" style={`background-image: url(${img_farm})`}></div>
+    {voyage.map((src, i) => (
+      <div class={`layer layer-voyage layer-v${i}`} style={`background-image: url(${src})`}></div>
+    ))}
     <div class="layer layer-oslo" style={`background-image: url(${img_oslo})`}></div>
     <div class="grain"></div>
     <div class="vignette"></div>
@@ -43,31 +45,31 @@ const displayCards = cards.length
     <span class="era-year" data-era>1500</span>
   </div>
 
-  <!-- ── Panel 1: The 1500s Voyage ────────────────────────────── -->
+  <!-- ── Panel 1: Wisconsin Farm ──────────────────────────────── -->
   <section class="panel">
     <div class="tray">
-      <p class="kicker">THE OLINSKE LINEAGE · CIRCA 1500</p>
-      <h2>The First<br/>Horizon.</h2>
-      <p class="copy">1500s: The journey across the unknown. A family sets sail from the old world toward something they could not yet name.</p>
+      <p class="kicker">ORIGIN · BARRON COUNTY, WI · 45.3° N</p>
+      <h2>Northern<br/>Roots.</h2>
+      <p class="copy">Wisconsin beginnings. Dairy farms, lake country, and roots planted deep enough to last five generations.</p>
       <p class="cue" aria-hidden="true">SCROLL DOWN ↓</p>
     </div>
   </section>
 
-  <!-- ── Panel 2: The 1900s Migration ─────────────────────────── -->
+  <!-- ── Panel 2: The Voyage ──────────────────────────────────── -->
   <section class="panel">
     <div class="tray">
-      <p class="kicker">BARRON COUNTY, WI · 45.3° N · CIRCA 1900</p>
-      <h2>Barron County<br/>Bound.</h2>
-      <p class="copy">1900s: Settling the Wisconsin frontier. Dairy farms, lake country, and roots planted deep enough to last five generations.</p>
+      <p class="kicker">THE VOYAGE · 1500s – 2014</p>
+      <h2>The<br/>Crossing.</h2>
+      <p class="copy">Five centuries of ships. Tall sails, steamships, and a one-way SAS ticket. Every generation crossed an ocean to find something better.</p>
     </div>
   </section>
 
-  <!-- ── Panel 3: 2014 Return to Norway ───────────────────────── -->
+  <!-- ── Panel 3: Oslo ────────────────────────────────────────── -->
   <section class="panel">
     <div class="tray">
-      <p class="kicker">OSLO, NORWAY · 59.9° N · 2014 – PRESENT</p>
+      <p class="kicker">DESTINATION · OSLO, NORWAY · 59.9° N</p>
       <h2>Signal Over<br/>Hype.</h2>
-      <p class="copy">2014: Returning to the fjords. Building in Oslo. Architecting cloud systems for Microsoft. $1,000 and a drive to build something real.</p>
+      <p class="copy">Architecting for Microsoft. Building a life in the city. Every system should be explainable at 11 PM on a Friday.</p>
 
       <div class="cards">
         {displayCards.map((card) => (
@@ -92,17 +94,12 @@ const displayCards = cards.length
     <div class="map-box" data-map>
       <p class="map-title">MAPPING THE SIGNAL: WI → OSL</p>
       <svg class="map-svg" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- North America simplified outline -->
         <path d="M50 190 Q80 140 130 148 Q170 115 210 135 Q250 75 290 118 Q310 105 335 128 L350 165 Q325 205 285 215 Q245 248 205 235 Q165 255 125 225 Q85 230 55 210Z" fill="rgba(120,165,210,0.1)" stroke="rgba(120,165,210,0.25)" stroke-width="0.7"/>
-        <!-- Europe simplified outline -->
         <path d="M470 95 Q515 72 560 82 Q605 60 650 78 Q690 64 715 90 L725 128 Q700 162 655 155 Q615 172 575 148 Q535 162 505 138 Q480 152 465 128Z" fill="rgba(120,165,210,0.1)" stroke="rgba(120,165,210,0.25)" stroke-width="0.7"/>
-        <!-- WI dot -->
         <circle cx="225" cy="152" r="6" fill="var(--accent, #ff6b35)" opacity="0.95"/>
         <text x="225" y="175" text-anchor="middle" fill="var(--accent, #ff6b35)" font-size="9" font-family="monospace" opacity="0.9">BARRON CO.</text>
-        <!-- Oslo dot -->
         <circle cx="585" cy="90" r="6" fill="#4da3ff" opacity="0.95"/>
         <text x="585" y="78" text-anchor="middle" fill="#4da3ff" font-size="9" font-family="monospace" opacity="0.9">OSLO</text>
-        <!-- Flight arc -->
         <path data-arc d="M231 152 Q405 15 579 90" stroke="url(#Garc)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
         <path data-arc-glow d="M231 152 Q405 15 579 90" stroke="rgba(77,163,255,0.12)" stroke-width="14" fill="none" stroke-linecap="round"/>
         <defs>
@@ -118,10 +115,8 @@ const displayCards = cards.length
 </div>
 
 <style>
-  /* ═══ VIEWPORT ══════════════════════════════════════════════════ */
   .montage { position: relative; width: 100%; background: #000; }
 
-  /* ═══ FIXED STAGE ══════════════════════════════════════════════ */
   .stage { position: fixed; inset: 0; overflow: hidden; z-index: 1; }
 
   .layer {
@@ -130,14 +125,13 @@ const displayCards = cards.length
     will-change: opacity, transform;
   }
 
-  .layer-1500 { opacity: 1; filter: brightness(0.48) sepia(0.35) saturate(0.75); }
-  .layer-1900 { opacity: 0; filter: brightness(0.45) sepia(0.25) saturate(0.82); }
+  .layer-farm { opacity: 1; filter: brightness(0.5) sepia(0.18) saturate(0.9); }
+  .layer-voyage { opacity: 0; filter: brightness(0.48) sepia(0.28) saturate(0.78); }
   .layer-oslo { opacity: 0; filter: brightness(0.5); }
 
-  /* Film grain — fractal noise SVG inlined as data URI */
   .grain {
-    position: absolute; inset: 0;
-    opacity: 0.38; mix-blend-mode: overlay; pointer-events: none;
+    position: absolute; inset: 0; opacity: 0.35;
+    mix-blend-mode: overlay; pointer-events: none;
     background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
     background-size: 200px;
   }
@@ -153,7 +147,6 @@ const displayCards = cards.length
     background-size: 32px 32px;
   }
 
-  /* ═══ PANELS ═══════════════════════════════════════════════════ */
   .panel {
     height: 100vh; position: relative; z-index: 2;
     display: flex; align-items: center; justify-content: center;
@@ -163,8 +156,7 @@ const displayCards = cards.length
   .tray {
     max-width: 880px; padding: clamp(1.2rem,3vw,2.2rem);
     background: rgba(6,14,28,0.28);
-    border: 1px solid rgba(200,220,255,0.1);
-    border-radius: 22px;
+    border: 1px solid rgba(200,220,255,0.1); border-radius: 22px;
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     box-shadow: 0 10px 40px rgba(0,0,0,0.24);
     position: relative; z-index: 3;
@@ -183,30 +175,12 @@ const displayCards = cards.length
     letter-spacing: -0.03em; line-height: 0.95; text-transform: uppercase;
   }
 
-  .copy {
-    margin: 1rem auto 0; max-width: 50ch;
-    font-size: clamp(1rem,1.65vw,1.18rem); line-height: 1.6;
-  }
+  .copy { margin: 1rem auto 0; max-width: 50ch; font-size: clamp(1rem,1.65vw,1.18rem); line-height: 1.6; }
+  .cue { margin-top: 2rem; font-family: var(--font-mono, Consolas, monospace); font-size: 0.76rem; letter-spacing: 0.14em; opacity: 0.55; }
 
-  .cue {
-    margin-top: 2rem;
-    font-family: var(--font-mono, Consolas, monospace);
-    font-size: 0.76rem; letter-spacing: 0.14em; opacity: 0.55;
-  }
+  .rail { position: fixed; left: 0; top: 0; width: 3px; height: 100vh; z-index: 60; background: rgba(120,150,180,0.1); pointer-events: none; }
+  .rail-fill { width: 100%; height: 0%; background: var(--accent, #ff6b35); box-shadow: 0 0 8px var(--accent, #ff6b35); transition: height 80ms linear; }
 
-  /* ═══ PROGRESS RAIL ════════════════════════════════════════════ */
-  .rail {
-    position: fixed; left: 0; top: 0; width: 3px; height: 100vh;
-    z-index: 60; background: rgba(120,150,180,0.1); pointer-events: none;
-  }
-  .rail-fill {
-    width: 100%; height: 0%;
-    background: var(--accent, #ff6b35);
-    box-shadow: 0 0 8px var(--accent, #ff6b35);
-    transition: height 80ms linear;
-  }
-
-  /* ═══ ERA BADGE ════════════════════════════════════════════════ */
   .era-badge {
     position: fixed; right: clamp(0.8rem,2vw,1.6rem); bottom: clamp(0.8rem,2vw,1.4rem);
     z-index: 60; display: flex; gap: 0.5rem; align-items: baseline;
@@ -214,80 +188,43 @@ const displayCards = cards.length
     border: 1px solid rgba(200,220,255,0.12);
     background: rgba(6,14,28,0.72);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    color: #d0e2ff; font-family: var(--font-mono, Consolas, monospace);
-    pointer-events: none;
+    color: #d0e2ff; font-family: var(--font-mono, Consolas, monospace); pointer-events: none;
   }
   .era-label { font-size: 0.62rem; letter-spacing: 0.14em; opacity: 0.65; }
   .era-year { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-  /* ═══ CARDS ════════════════════════════════════════════════════ */
-  .cards {
-    margin-top: 2rem; display: grid;
-    grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0.85rem; text-align: left;
-  }
+  .cards { margin-top: 2rem; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0.85rem; text-align: left; }
   .card {
-    text-decoration: none; color: #e6efff;
-    border-radius: 14px; border: 1px solid rgba(160,200,255,0.22);
-    background: rgba(8,22,42,0.5);
+    text-decoration: none; color: #e6efff; border-radius: 14px;
+    border: 1px solid rgba(160,200,255,0.22); background: rgba(8,22,42,0.5);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     padding: 0.85rem; transition: transform 220ms ease, box-shadow 220ms ease;
   }
   .card:hover { transform: translateY(-8px); box-shadow: 0 22px 52px rgba(4,14,28,0.55); }
-  .card-eye {
-    margin: 0; font-family: var(--font-mono, Consolas, monospace);
-    font-size: 0.66rem; letter-spacing: 0.06em; opacity: 0.72;
-  }
+  .card-eye { margin: 0; font-family: var(--font-mono, Consolas, monospace); font-size: 0.66rem; letter-spacing: 0.06em; opacity: 0.72; }
   .card h3 { margin: 0.4rem 0; font-family: var(--font-display); font-size: 1rem; line-height: 1.3; }
   .card-desc { margin: 0; font-size: 0.85rem; color: #b8cceb; line-height: 1.45; }
-  .card-ledger {
-    margin-top: 0.6rem; padding-top: 0.5rem;
-    border-top: 1px dashed rgba(160,200,255,0.25);
-  }
-  .card-ledger p {
-    margin: 0; font-family: var(--font-mono, Consolas, monospace);
-    font-size: 0.66rem; letter-spacing: 0.04em; line-height: 1.55;
-  }
+  .card-ledger { margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed rgba(160,200,255,0.25); }
+  .card-ledger p { margin: 0; font-family: var(--font-mono, Consolas, monospace); font-size: 0.66rem; letter-spacing: 0.04em; line-height: 1.55; }
 
-  /* ═══ MAP ══════════════════════════════════════════════════════ */
   .map-panel { min-height: 100vh; }
   .map-box {
     width: min(920px, 94vw); padding: 1.5rem;
     opacity: 0; transform: translateY(30px);
-    background: rgba(6,14,28,0.4);
-    border: 1px solid rgba(200,220,255,0.1);
-    border-radius: 20px;
+    background: rgba(6,14,28,0.4); border: 1px solid rgba(200,220,255,0.1); border-radius: 20px;
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   }
-  .map-title {
-    margin: 0 0 0.4rem;
-    font-family: var(--font-mono, Consolas, monospace);
-    font-size: 0.72rem; letter-spacing: 0.18em;
-    text-transform: uppercase; color: var(--accent, #4da3ff);
-  }
+  .map-title { margin: 0 0 0.4rem; font-family: var(--font-mono, Consolas, monospace); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent, #4da3ff); }
   .map-svg { width: 100%; height: auto; }
-  .map-coord {
-    margin: 0.5rem 0 0;
-    font-family: var(--font-mono, Consolas, monospace);
-    font-size: 0.72rem; letter-spacing: 0.06em; opacity: 0.65;
-  }
+  .map-coord { margin: 0.5rem 0 0; font-family: var(--font-mono, Consolas, monospace); font-size: 0.72rem; letter-spacing: 0.06em; opacity: 0.65; }
 
-  /* ═══ THEME TINTING ════════════════════════════════════════════ */
-  html[data-theme='foundry'] .layer-1500,
-  html[data-theme='foundry'] .layer-1900 {
-    filter: brightness(0.42) sepia(0.45) saturate(1.0) hue-rotate(-12deg);
-  }
-  html[data-theme='fjord'] .layer-oslo {
-    filter: brightness(0.52) saturate(1.1) hue-rotate(-8deg);
-  }
-  html[data-theme='midnight'] .layer {
-    filter: brightness(0.38) grayscale(1) contrast(1.22);
-  }
+  html[data-theme='foundry'] .layer-farm,
+  html[data-theme='foundry'] .layer-voyage { filter: brightness(0.42) sepia(0.45) saturate(1.0) hue-rotate(-12deg); }
+  html[data-theme='fjord'] .layer-oslo { filter: brightness(0.52) saturate(1.1) hue-rotate(-8deg); }
+  html[data-theme='midnight'] .layer { filter: brightness(0.38) grayscale(1) contrast(1.22); }
 
   @media (max-width: 980px) { .cards { grid-template-columns: 1fr; } }
-
-  @media (prefers-reduced-motion: reduce) {
-    .layer, .grain, .vignette, .grid-overlay, .map-box { transition: none !important; animation: none !important; }
-  }
+  @media (prefers-reduced-motion: reduce) { .layer, .grain, .vignette, .grid-overlay, .map-box { transition: none !important; animation: none !important; } }
 </style>
 
 <script>
@@ -295,25 +232,27 @@ const displayCards = cards.length
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
 
-  const root   = document.querySelector<HTMLElement>('[data-story-root]');
-  const l1500  = document.querySelector<HTMLElement>('.layer-1500');
-  const l1900  = document.querySelector<HTMLElement>('.layer-1900');
-  const lOslo  = document.querySelector<HTMLElement>('.layer-oslo');
-  const grain  = document.querySelector<HTMLElement>('.grain');
-  const vig    = document.querySelector<HTMLElement>('.vignette');
-  const grid   = document.querySelector<HTMLElement>('.grid-overlay');
-  const mapBox = document.querySelector<HTMLElement>('[data-map]');
-  const arc    = document.querySelector<SVGPathElement>('[data-arc]');
-  const arcG   = document.querySelector<SVGPathElement>('[data-arc-glow]');
-  const eraEl  = document.querySelector<HTMLElement>('[data-era]');
-  const railEl = document.querySelector<HTMLElement>('[data-rail]');
+  const root     = document.querySelector<HTMLElement>('[data-story-root]');
+  const farm     = document.querySelector<HTMLElement>('.layer-farm');
+  const voyages  = Array.from(document.querySelectorAll<HTMLElement>('.layer-voyage'));
+  const oslo     = document.querySelector<HTMLElement>('.layer-oslo');
+  const grain    = document.querySelector<HTMLElement>('.grain');
+  const vig      = document.querySelector<HTMLElement>('.vignette');
+  const grid     = document.querySelector<HTMLElement>('.grid-overlay');
+  const mapBox   = document.querySelector<HTMLElement>('[data-map]');
+  const arc      = document.querySelector<SVGPathElement>('[data-arc]');
+  const arcG     = document.querySelector<SVGPathElement>('[data-arc-glow]');
+  const eraEl    = document.querySelector<HTMLElement>('[data-era]');
+  const railEl   = document.querySelector<HTMLElement>('[data-rail]');
 
-  if (root) {
+  if (root && farm) {
+    const voyageCount = voyages.length;
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: root,
         start: 'top top',
-        end: '+=400%',
+        end: '+=500%',
         scrub: 1,
         pin: true,
         anticipatePin: 1,
@@ -323,44 +262,64 @@ const displayCards = cards.length
       },
     });
 
-    // ── Era 1 → 2: 1500s Ken Burns zoom + melt into 1900s ──────
-    tl.fromTo(l1500, { scale: 1 }, { scale: 1.15, duration: 2 })
-      .to(l1500, { opacity: 0, duration: 1 }, 0.7)
-      .to(grain, { opacity: 0.22, duration: 1 }, 0.7)  // grain lightens slightly
+    // ── Farm: Ken Burns zoom, then fade ─────────────────────────
+    tl.fromTo(farm, { scale: 1 }, { scale: 1.15, duration: 1.5 })
+      .to(farm, { opacity: 0, duration: 0.8 }, 0.8);
 
-    // ── Era 2: 1900s rises with sepia Ken Burns ─────────────────
-      .fromTo(l1900, { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1.12, duration: 2 }, 0.7)
-      .to(l1900, { opacity: 0, duration: 1 }, 2.2)
-      .to(grain, { opacity: 0, duration: 0.8 }, 2.2)  // grain clears completely
-      .to(vig, { opacity: 0.25, duration: 1 }, 2.2)     // vignette lifts
+    // ── Voyage montage: cycle through each ship/plane image ─────
+    const voyageDur = 2.0;
+    const perImage = voyageCount > 0 ? voyageDur / voyageCount : voyageDur;
+    let voyageStart = 0.8;
 
-    // ── Era 3: Oslo in HD clarity ───────────────────────────────
-      .fromTo(lOslo, { opacity: 0, scale: 0.88 }, { opacity: 1, scale: 1.06, duration: 1.4 }, 2.1)
-      .to(grid, { opacity: 0.7, duration: 0.8 }, 2.8)  // blueprint grid reveals
+    voyages.forEach((v, i) => {
+      // Fade in with Ken Burns
+      tl.fromTo(v,
+        { opacity: 0, scale: 0.94 },
+        { opacity: 1, scale: 1.1, duration: perImage * 0.7 },
+        voyageStart + i * perImage
+      );
+      // Fade out (except we let the last one hold briefly)
+      if (i < voyageCount - 1) {
+        tl.to(v, { opacity: 0, duration: perImage * 0.35 }, voyageStart + (i + 0.65) * perImage);
+      } else {
+        tl.to(v, { opacity: 0, duration: perImage * 0.4 }, voyageStart + voyageDur - perImage * 0.2);
+      }
+    });
 
-    // ── Map panel rise ──────────────────────────────────────────
-      .fromTo(mapBox, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7 }, 3.2);
+    // Grain fades during voyage
+    tl.to(grain, { opacity: 0, duration: 1 }, voyageStart + voyageDur * 0.5);
+    // Vignette lightens
+    tl.to(vig, { opacity: 0.25, duration: 1 }, voyageStart + voyageDur * 0.6);
 
-    // ── Arc draw ────────────────────────────────────────────────
+    // ── Oslo: HD clarity entrance ───────────────────────────────
+    const osloStart = voyageStart + voyageDur + 0.2;
+    tl.fromTo(oslo, { opacity: 0, scale: 0.88 }, { opacity: 1, scale: 1.05, duration: 1.2 }, osloStart);
+    tl.to(grid, { opacity: 0.7, duration: 0.8 }, osloStart + 0.5);
+
+    // ── Map reveal + arc draw ───────────────────────────────────
+    const mapStart = osloStart + 1.5;
+    tl.fromTo(mapBox, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.7 }, mapStart);
+
     [arc, arcG].forEach((el) => {
       if (!el) return;
       const len = el.getTotalLength();
       el.style.strokeDasharray = String(len);
       el.style.strokeDashoffset = String(len);
-      tl.to(el, { strokeDashoffset: 0, duration: 0.8, ease: 'power2.out' }, 3.35);
+      tl.to(el, { strokeDashoffset: 0, duration: 0.8, ease: 'power2.out' }, mapStart + 0.1);
     });
 
-    // ── rAF loop: era counter + progress bar ────────────────────
+    // ── Era counter + progress bar ──────────────────────────────
     const ERAS = [
       { at: 0.00, y: 1500 },
-      { at: 0.25, y: 1900 },
+      { at: 0.18, y: 1700 },
+      { at: 0.30, y: 1800 },
+      { at: 0.42, y: 1900 },
       { at: 0.55, y: 2014 },
-      { at: 0.78, y: 2026 },
+      { at: 0.72, y: 2026 },
     ];
 
     const tick = () => {
       const p = parseFloat(root.style.getPropertyValue('--sp') || '0');
-
       if (railEl) railEl.style.height = `${(p * 100).toFixed(1)}%`;
 
       if (eraEl) {
@@ -373,9 +332,8 @@ const displayCards = cards.length
           }
           if (p > ERAS[i + 1].at) year = ERAS[i + 1].y;
         }
-        eraEl.textContent = p >= 0.92 ? 'PRESENT' : String(year);
+        eraEl.textContent = p >= 0.9 ? 'PRESENT' : String(year);
       }
-
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
