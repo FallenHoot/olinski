@@ -3,9 +3,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import HorizontalHero from '../components/HorizontalHero.astro';
 import { getCollection } from 'astro:content';
 
-const img_wisconsin = 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1600&q=80';
-const img_mountains = 'https://images.unsplash.com/photo-1464822759844-d150ad6d1d00?auto=format&fit=crop&w=1600&q=80';
-const img_oslo = 'https://images.unsplash.com/photo-1593888566144-6f2db0f2f8d8?auto=format&fit=crop&w=1600&q=80';
+// Era 1: 1500s — tall ships / old maps
+const img_1500s = '/images/1500s-voyage.jpg';
+// Era 2: 1900s — steamship / Wisconsin settlement
+const img_1900s = '/images/1900s-steamship.jpg';
+// Era 3: Modern — Oslo skyline / Barcode district
+const img_oslo = '/images/oslo-skyline.jpg';
 
 const posts = (
   await getCollection('posts', ({ data }) =>
@@ -22,6 +25,5 @@ const posts = (
 ---
 
 <BaseLayout title="Olinske | Signal Over Hype">
-  <HorizontalHero img_wisconsin={img_wisconsin} img_mountains={img_mountains} img_oslo={img_oslo} cards={posts} />
-
+  <HorizontalHero img_wisconsin={img_1500s} img_mountains={img_1900s} img_oslo={img_oslo} cards={posts} />
 </BaseLayout>
