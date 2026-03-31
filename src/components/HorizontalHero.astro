@@ -1,0 +1,356 @@
+---
+interface Props {
+  img_wisconsin: string;
+  img_mountains: string;
+  img_oslo: string;
+}
+
+const { img_wisconsin, img_mountains, img_oslo } = Astro.props;
+---
+
+<section class="hh-root" data-story-root aria-label="Northern Roots to Oslo journey">
+  <div class="hh-track" data-story-track>
+    <article class="hh-panel hh-panel-farm" data-story-panel>
+      <img class="hh-image hh-img-farm" src={img_wisconsin} alt="Wisconsin farm landscape" loading="eager" decoding="async" />
+      <div class="hh-glass">
+        <p class="hh-kicker">WISCONSIN STEEL</p>
+        <h1>NORTHERN ROOTS.</h1>
+      </div>
+    </article>
+
+    <article class="hh-panel hh-panel-fjord" data-story-panel>
+      <img class="hh-image hh-img-fjord" src={img_mountains} alt="Scandinavian mountains and fjords" loading="lazy" decoding="async" />
+      <div class="hh-wipe-mask" data-wipe-mask aria-hidden="true"></div>
+      <div class="hh-glass hh-glass-center" data-frost-layer>
+        <p class="hh-kicker">THE ATLANTIC BRIDGE</p>
+        <h2>THE CROSSING.</h2>
+      </div>
+    </article>
+
+    <article class="hh-panel hh-panel-oslo" data-story-panel>
+      <img class="hh-image hh-img-oslo" src={img_oslo} alt="Oslo skyline at sunset" loading="lazy" decoding="async" />
+      <div class="hh-oslo-overlay" aria-hidden="true"></div>
+      <div class="hh-glass">
+        <p class="hh-kicker">THE MONOLITH</p>
+        <h2>Signal Over Hype.</h2>
+        <p class="hh-copy">I build cloud systems for Microsoft. I am building a home in Norway. This is how I cut through the hype to find the signal.</p>
+      </div>
+      <div class="hh-monolith" data-monolith aria-hidden="true"></div>
+    </article>
+  </div>
+
+  <aside class="hh-loc" aria-live="polite">
+    <span>LOC:</span>
+    <span data-loc-value>45.7° N (WI)</span>
+  </aside>
+</section>
+
+<style is:global>
+  .hh-root {
+    --story-progress: 0;
+    --mono-progress: 0;
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .hh-track {
+    display: flex;
+    width: 300vw;
+    height: 100vh;
+    will-change: transform;
+  }
+
+  .hh-panel {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    align-items: center;
+    justify-items: start;
+    padding: clamp(1rem, 2vw, 2rem);
+  }
+
+  .hh-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1);
+    transition: filter 260ms ease;
+  }
+
+  .hh-panel-farm .hh-image {
+    transform-origin: center center;
+  }
+
+  .hh-panel-fjord .hh-image {
+    filter: blur(calc(var(--mono-progress) * 14px));
+  }
+
+  .hh-panel-oslo .hh-image {
+    transform-origin: center center;
+    scale: 0.92;
+  }
+
+  .hh-oslo-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+  }
+
+  .hh-glass {
+    position: relative;
+    z-index: 3;
+    max-width: min(760px, 92vw);
+    border: 1px solid color-mix(in srgb, var(--border, #d6e3f2) 60%, transparent);
+    border-radius: 20px;
+    padding: clamp(1rem, 2vw, 1.8rem);
+    background: color-mix(in srgb, var(--surface, #ffffff) 30%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow, 0 14px 44px rgba(13, 35, 64, 0.16));
+  }
+
+  .hh-glass-center {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .hh-kicker {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-mono, Consolas, monospace);
+    font-size: 0.74rem;
+    letter-spacing: 0.13em;
+  }
+
+  .hh-glass h1,
+  .hh-glass h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+  }
+
+  .hh-glass h1 {
+    font-size: clamp(2.8rem, 10vw, 7rem);
+  }
+
+  .hh-glass h2 {
+    font-size: clamp(2.2rem, 8vw, 5.4rem);
+  }
+
+  .hh-copy {
+    margin: 0.85rem 0 0;
+    font-size: clamp(0.98rem, 1.8vw, 1.2rem);
+    line-height: 1.55;
+  }
+
+  .hh-wipe-mask {
+    position: absolute;
+    inset: -8% -8% -8% auto;
+    width: 62%;
+    z-index: 2;
+    background: linear-gradient(130deg, rgba(0, 0, 0, 0), rgba(10, 20, 34, 0.72));
+    clip-path: polygon(100% 0, 100% 100%, 24% 100%, 0 0);
+    pointer-events: none;
+  }
+
+  .hh-monolith {
+    position: absolute;
+    right: clamp(1rem, 5vw, 4rem);
+    bottom: clamp(1rem, 4vw, 2.4rem);
+    width: min(210px, 30vw);
+    height: min(320px, 46vh);
+    border-radius: 20px;
+    z-index: 3;
+    background:
+      linear-gradient(150deg, rgba(255, 255, 255, 0.24), rgba(77, 163, 255, 0.24) 45%, rgba(0, 0, 0, 0.72)),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 40%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 32px 72px rgba(0, 0, 0, 0.45);
+    transform: perspective(900px) rotateY(calc((var(--mx, 0.5) - 0.5) * 20deg)) rotateX(calc((0.5 - var(--my, 0.5)) * 14deg));
+  }
+
+  .hh-loc {
+    position: fixed;
+    left: clamp(0.8rem, 2.2vw, 1.8rem);
+    bottom: clamp(0.8rem, 2.2vw, 1.4rem);
+    z-index: 25;
+    display: inline-flex;
+    gap: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--border, #d6e3f2) 60%, transparent);
+    background: rgba(8, 20, 38, 0.72);
+    color: #d6e8ff;
+    font-family: var(--font-mono, Consolas, monospace);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: none;
+  }
+
+  html[data-theme='fjord'] .hh-image {
+    filter: saturate(1.05) hue-rotate(-6deg) contrast(1.02);
+  }
+
+  html[data-theme='foundry'] .hh-image {
+    filter: saturate(1.08) hue-rotate(-18deg) sepia(0.18) contrast(1.04);
+  }
+
+  html[data-theme='midnight'] .hh-image {
+    filter: grayscale(1) contrast(1.22) brightness(0.82);
+  }
+
+  @media (max-width: 860px) {
+    .hh-panel {
+      justify-items: center;
+    }
+
+    .hh-glass {
+      text-align: center;
+    }
+
+    .hh-monolith {
+      position: relative;
+      right: auto;
+      bottom: auto;
+      margin-top: 1rem;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { initMonolithScroll } from '../scripts/gsap-horizontal-monolith';
+
+  gsap.registerPlugin(ScrollTrigger);
+  initMonolithScroll();
+
+  const root = document.querySelector<HTMLElement>('[data-story-root]');
+  const track = document.querySelector<HTMLElement>('[data-story-track]');
+  const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-story-panel]'));
+  const farmImage = document.querySelector<HTMLElement>('.hh-img-farm');
+  const fjordImage = document.querySelector<HTMLElement>('.hh-img-fjord');
+  const osloImage = document.querySelector<HTMLElement>('.hh-img-oslo');
+  const wipeMask = document.querySelector<HTMLElement>('[data-wipe-mask]');
+  const locValue = document.querySelector<HTMLElement>('[data-loc-value]');
+  const monolith = document.querySelector<HTMLElement>('[data-monolith]');
+
+  if (root && track && panels.length >= 3) {
+    const st = ScrollTrigger.getById('monolith-horizontal-track');
+
+    const setLoc = (progress: number) => {
+      if (!locValue) return;
+      const lat = 45.7 + (59.9 - 45.7) * progress;
+      const city = progress < 0.5 ? 'WI' : 'OSL';
+      locValue.textContent = `${lat.toFixed(1)}° N (${city})`;
+    };
+
+    const onUpdate = () => {
+      const progress = Number(root.style.getPropertyValue('--story-progress') || '0');
+      root.style.setProperty('--mono-progress', progress.toFixed(3));
+      setLoc(progress);
+    };
+
+    if (st) {
+      // Panel 1: subtle field walk-in scale
+      if (farmImage) {
+        gsap.fromTo(
+          farmImage,
+          { scale: 1 },
+          {
+            scale: 1.1,
+            ease: 'none',
+            scrollTrigger: {
+              containerAnimation: st.animation,
+              trigger: panels[0],
+              start: 'left left',
+              end: 'right left',
+              scrub: true,
+            },
+          },
+        );
+      }
+
+      // Transition 1->2: diagonal wipe from right
+      if (wipeMask) {
+        gsap.fromTo(
+          wipeMask,
+          { clipPath: 'polygon(100% 0, 100% 100%, 24% 100%, 0 0)' },
+          {
+            clipPath: 'polygon(100% 0, 100% 100%, 100% 100%, 100% 0)',
+            ease: 'power2.out',
+            scrollTrigger: {
+              containerAnimation: st.animation,
+              trigger: panels[1],
+              start: 'left 92%',
+              end: 'left 36%',
+              scrub: true,
+            },
+          },
+        );
+      }
+
+      // Panel 2 dreamy blur as crossing advances
+      if (fjordImage) {
+        gsap.fromTo(
+          fjordImage,
+          { filter: 'blur(0px)' },
+          {
+            filter: 'blur(7px)',
+            ease: 'none',
+            scrollTrigger: {
+              containerAnimation: st.animation,
+              trigger: panels[1],
+              start: 'left 60%',
+              end: 'right 35%',
+              scrub: true,
+            },
+          },
+        );
+      }
+
+      // Transition 2->3: Oslo scale-in from center
+      if (osloImage) {
+        gsap.fromTo(
+          osloImage,
+          { scale: 0.84, transformOrigin: '50% 50%' },
+          {
+            scale: 1,
+            ease: 'power2.out',
+            scrollTrigger: {
+              containerAnimation: st.animation,
+              trigger: panels[2],
+              start: 'left 88%',
+              end: 'left 44%',
+              scrub: true,
+            },
+          },
+        );
+      }
+    }
+
+    const ticker = () => {
+      onUpdate();
+      requestAnimationFrame(ticker);
+    };
+    requestAnimationFrame(ticker);
+
+    // Pointer tilt for monolith object
+    if (monolith) {
+      document.addEventListener('pointermove', (event) => {
+        const x = event.clientX / window.innerWidth;
+        const y = event.clientY / window.innerHeight;
+        monolith.style.setProperty('--mx', x.toFixed(3));
+        monolith.style.setProperty('--my', y.toFixed(3));
+      }, { passive: true });
+    }
+  }
+</script>
