@@ -31,10 +31,11 @@ const currentPath = Astro.url.pathname;
     <!-- Run before first paint to prevent flash of wrong theme -->
     <script is:inline>
       (function () {
-        var VALID = ['fjord', 'foundry'];
+        var VALID = ['fjord', 'foundry', 'midnight'];
         var ALIASES = {
           'nordic-light': 'fjord',
-          'deep-cloud': 'foundry'
+          'deep-cloud': 'foundry',
+          'high-contrast': 'midnight'
         };
         var param  = new URLSearchParams(window.location.search).get('theme');
         var saved  = localStorage.getItem('theme') || 'fjord';

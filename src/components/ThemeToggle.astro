@@ -1,24 +1,72 @@
 ---
-// ThemeToggle — cycles Fjord ↔ Foundry and persists to localStorage
+// ThemeToggle — cycles Fjord -> Foundry -> Midnight and persists to localStorage
 ---
 
 <button
   id="theme-toggle"
   class="lab-toggle theme-toggle"
   type="button"
-  aria-label="Toggle between Fjord and Foundry"
-  title="Toggle Fjord / Foundry"
+  aria-label="Theme: Fjord. Click to change."
+  title="Cycle Lab Themes"
 >
-  <span class="toggle-icon" aria-hidden="true">◐</span>
+  <span class="cheese-icon" aria-hidden="true">
+    <span class="cheese-curd"></span>
+    <span class="cheese-ball"></span>
+  </span>
 </button>
 
+<style>
+  .cheese-icon {
+    width: 1.05rem;
+    height: 1.05rem;
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .cheese-curd,
+  .cheese-ball {
+    position: absolute;
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+
+  .cheese-curd {
+    width: 0.9rem;
+    height: 0.75rem;
+    border-radius: 40% 58% 46% 60%;
+    background: radial-gradient(circle at 32% 32%, #ffe58a, #ffd24a 58%, #e5a800 100%);
+    box-shadow: inset 0 0 0 1px rgba(50, 35, 0, 0.15);
+  }
+
+  .cheese-ball {
+    width: 0.86rem;
+    height: 0.86rem;
+    border-radius: 999px;
+    background: radial-gradient(circle at 34% 30%, #ffe07c, #f7b936 62%, #cf8500 100%);
+    box-shadow: inset 0 0 0 1px rgba(50, 35, 0, 0.18);
+    opacity: 0;
+    transform: scale(0.72);
+  }
+
+  .theme-toggle[data-cheese='ball'] .cheese-curd {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  .theme-toggle[data-cheese='ball'] .cheese-ball {
+    opacity: 1;
+    transform: scale(1);
+  }
+</style>
+
 <script>
-  const THEMES = ['fjord', 'foundry'] as const;
+  const THEMES = ['fjord', 'foundry', 'midnight'] as const;
   type Theme = typeof THEMES[number];
 
   const LABELS: Record<Theme, string> = {
     fjord:    'Fjord',
-    foundry:  'Foundry'
+    foundry:  'Foundry',
+    midnight: 'Midnight'
   };
 
   function isTheme(v: string | null): v is Theme {
@@ -26,6 +74,11 @@
   }
 
   const btn = document.getElementById('theme-toggle')!;
+
+  function syncCheese(theme: Theme) {
+    const cheese = theme === 'fjord' ? 'curd' : 'ball';
+    btn.setAttribute('data-cheese', cheese);
+  }
 
   function applyTheme(next: Theme) {
     document.body.classList.remove('theme-wave-active');
@@ -35,6 +88,8 @@
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('theme', next);
     btn.setAttribute('aria-label', `Theme: ${LABELS[next]}. Click to change.`);
+    syncCheese(next);
+    window.dispatchEvent(new CustomEvent('lab-theme-change', { detail: { theme: next } }));
   }
 
   btn.addEventListener('click', () => {
@@ -48,6 +103,9 @@
   const initial = document.documentElement.getAttribute('data-theme');
   if (isTheme(initial)) {
     btn.setAttribute('aria-label', `Theme: ${LABELS[initial]}. Click to change.`);
+    syncCheese(initial);
+  } else {
+    syncCheese('fjord');
   }
 
   document.body.addEventListener('animationend', (event) => {
