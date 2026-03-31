@@ -1,0 +1,58 @@
+---
+// ThemeToggle — cycles Fjord ↔ Foundry and persists to localStorage
+---
+
+<button
+  id="theme-toggle"
+  class="lab-toggle theme-toggle"
+  type="button"
+  aria-label="Toggle between Fjord and Foundry"
+  title="Toggle Fjord / Foundry"
+>
+  <span class="toggle-icon" aria-hidden="true">◐</span>
+</button>
+
+<script>
+  const THEMES = ['fjord', 'foundry'] as const;
+  type Theme = typeof THEMES[number];
+
+  const LABELS: Record<Theme, string> = {
+    fjord:    'Fjord',
+    foundry:  'Foundry'
+  };
+
+  function isTheme(v: string | null): v is Theme {
+    return THEMES.includes(v as Theme);
+  }
+
+  const btn = document.getElementById('theme-toggle')!;
+
+  function applyTheme(next: Theme) {
+    document.body.classList.remove('theme-wave-active');
+    void document.body.offsetWidth;
+    document.body.classList.add('theme-wave-active');
+
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    btn.setAttribute('aria-label', `Theme: ${LABELS[next]}. Click to change.`);
+  }
+
+  btn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const idx     = isTheme(current) ? THEMES.indexOf(current) : 0;
+    const next    = THEMES[(idx + 1) % THEMES.length];
+    applyTheme(next);
+  });
+
+  // Sync initial aria-label
+  const initial = document.documentElement.getAttribute('data-theme');
+  if (isTheme(initial)) {
+    btn.setAttribute('aria-label', `Theme: ${LABELS[initial]}. Click to change.`);
+  }
+
+  document.body.addEventListener('animationend', (event) => {
+    if (event.animationName === 'theme-wave') {
+      document.body.classList.remove('theme-wave-active');
+    }
+  });
+</script>

@@ -19,7 +19,8 @@
     "ci:publish": "npm run ci:review && npm run check:content:publish && npm run check:agent-artifacts"
   },
   "dependencies": {
-    "astro": "^5.6.0"
+    "astro": "^5.6.0",
+    "gsap": "^3.14.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
