@@ -28,6 +28,8 @@ const currentPath = Astro.url.pathname;
       rel="stylesheet"
     />
     <title>{title}</title>
+    <!-- Mapbox GL CSS for globe rendering -->
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" />
     <!-- Run before first paint to prevent flash of wrong theme -->
     <script is:inline>
       (function () {
