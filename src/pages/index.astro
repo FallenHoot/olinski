@@ -2,117 +2,74 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 
-const themeContent = {
-  executive: {
-    eyebrow: 'Olinske | Strategic Counsel',
-    title: 'Signal Over Hype.',
-    subtitle: 'Trusted guidance for CTOs and enterprise leaders navigating AI readiness, cloud resilience, and operating model transformation.'
-  },
-  technical: {
-    eyebrow: 'Olinske | Execution Precision',
-    title: 'Clear thinking at scale.',
-    subtitle: 'Engineering frameworks for enterprise AI infrastructure, cloud architecture decisions, and CTO-level technical leadership.'
-  },
-  forward: {
-    eyebrow: 'Olinske | Future Vision',
-    title: 'Where enterprise goes next.',
-    subtitle: 'Bold perspectives on AI transformation, organizational resilience, and leadership in an era of continuous change.'
-  },
-  clarity: {
-    eyebrow: 'Olinske | Direct Guidance',
-    title: 'No fluff. No hype.',
-    subtitle: 'Straight talk for CTOs and technical leaders. Frameworks, decisions, architecture choices. Clean analysis.'
-  },
-  craft: {
-    eyebrow: 'Olinske | Thoughtful Leadership',
-    title: 'Build with intent.',
-    subtitle: 'Carefully crafted insights on enterprise transformation, technology strategy, and the human side of leading through change.'
-  }
-};
-
-const publishedPosts = (await getCollection('posts', ({ data }) => data.status === 'published'))
+const publishedPosts = (await getCollection('posts', ({ data }) => data.status === 'published' || data.status === 'scheduled'))
   .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
-  .slice(0, 5);
+  .slice(0, 9);
+
+const estimateReadTime = (body?: string) => {
+  const wordCount = (body ?? '').trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(wordCount / 220));
+};
 ---
 
 <BaseLayout title="Olinske | Signal Over Hype">
   <main class="container site-shell">
-    <section class="panel hero fade-in">
-      <p class="eyebrow">Olinske | Strategic Counsel</p>
-      <h1 class="hero-title">Signal Over Hype.</h1>
-      <p class="hero-subtitle">Trusted guidance for CTOs and enterprise leaders navigating AI readiness, cloud resilience, and operating model transformation.</p>
+    <section class="hero-panel fade-in">
+      <p class="eyebrow">American-Norwegian Cloud Journal</p>
+      <h1 class="hero-title">Signal Over Hype for Cloud Architects.</h1>
+      <p class="hero-subtitle">
+        Enterprise AI, resilient cloud systems, and technical leadership playbooks.
+        Clean Nordic structure with bold, practical execution.
+      </p>
+      <div class="hero-actions">
+        <a class="btn-link" href="/posts/">Read Latest Articles</a>
+        <a class="btn-link btn-muted" href="#about">About This Lab</a>
+      </div>
     </section>
 
-    <section class="grid">
-      <article class="panel section grid-main fade-in fade-delay-1">
-        <h2>Latest published posts</h2>
-        {
-          publishedPosts.length === 0 ? (
-            <p class="post-meta">No published posts yet. Drafts are still moving through review.</p>
-          ) : (
-            <ul class="post-list">
-              {publishedPosts.map((post) => (
-                <li>
-                  <a href={`/posts/${post.id.replace(/\.md$/, '')}/`}>{post.data.title}</a>
-                  <div class="post-meta">{post.data.publishDate.toISOString().slice(0, 10)}</div>
-                </li>
-              ))}
-            </ul>
-          )
-        }
-        <a class="btn-link" href="/posts/">View all posts</a>
-      </article>
-
-      <aside class="panel section grid-side fade-in fade-delay-2">
-        <h2>Now in progress</h2>
-        <ul>
-          <li>Issue-driven editorial workflow</li>
-          <li>Research, draft, and review helper agents</li>
-          <li>LinkedIn-first distribution playbook</li>
-        </ul>
-
-        <h2 style="margin-top: 1.2rem;">Theme Lab</h2>
-        <div class="theme-lab">
-          <a class="theme-link" href="/?theme=executive">
-            <strong>Executive</strong>
-            <span>Classic, professional, serif-forward.</span>
-          </a>
-          <a class="theme-link" href="/?theme=technical">
-            <strong>Technical</strong>
-            <span>Cool, precise, engineer-friendly.</span>
-          </a>
-          <a class="theme-link" href="/?theme=forward">
-            <strong>Forward</strong>
-            <span>Bold, modern, generous whitespace.</span>
-          </a>
-          <a class="theme-link" href="/?theme=clarity">
-            <strong>Clarity</strong>
-            <span>Minimal, high-contrast, accessible.</span>
-          </a>
-          <a class="theme-link" href="/?theme=craft">
-            <strong>Craft</strong>
-            <span>Warm, creative, personality-driven.</span>
-          </a>
-          <a class="theme-link" href="/?theme=operator">
-            <strong>Operator</strong>
-            <span>Analytical, operational, technical.</span>
-          </a>
-          <a class="theme-link" href="/?theme=horizon">
-            <strong>Horizon</strong>
-            <span>Exploratory, visionary, forward.</span>
-          </a>
-        </div>
-      </aside>
+    <section class="feed-head fade-in fade-delay-1">
+      <h2>Discovery Feed</h2>
+      <p class="post-meta">Scroll through architecture notes, operational playbooks, and AI strategy essays.</p>
     </section>
 
-    <section class="panel section fade-in fade-delay-2" style="margin-top: 1.1rem;">
-      <h2>CTO Return Criteria</h2>
-      <ul class="criteria-list">
-        <li>Can skim key ideas in under 90 seconds.</li>
-        <li>Every post has one concrete framework or decision model.</li>
-        <li>Visual tone feels credible, calm, and non-gimmicky.</li>
-        <li>Navigation makes it obvious what to read next.</li>
-      </ul>
+    <section class="feed-grid fade-in fade-delay-2">
+      {
+        publishedPosts.length === 0 ? (
+          <article class="post-card">
+            <div class="post-thumb" aria-hidden="true"></div>
+            <div class="post-content">
+              <h3>No published posts yet</h3>
+              <p class="post-meta">Run the editorial workflow and publish your first post.</p>
+            </div>
+          </article>
+        ) : (
+          publishedPosts.map((post) => (
+            <article class="post-card">
+              <a class="post-card-link" href={`/posts/${post.id.replace(/\.md$/, '')}/`}>
+                <div class="post-thumb" aria-hidden="true"></div>
+                <div class="post-content">
+                  <div class="tag-row">
+                    {(post.data.tags ?? []).slice(0, 3).map((tag) => (
+                      <span class="tag-chip">{tag}</span>
+                    ))}
+                  </div>
+                  <h3>{post.data.title}</h3>
+                  <p>{post.data.description}</p>
+                  <p class="post-meta">{post.data.publishDate.toISOString().slice(0, 10)} · {estimateReadTime(post.body)} min read</p>
+                </div>
+              </a>
+            </article>
+          ))
+        )
+      }
+    </section>
+
+    <section id="about" class="about-panel fade-in fade-delay-2">
+      <h2>About the Lab</h2>
+      <p>
+        This site combines Nordic minimalism with American directness.
+        The Lab icon in the top-right cycles between Nordic Light, Deep Cloud, and High-Contrast themes.
+      </p>
     </section>
   </main>
 </BaseLayout>

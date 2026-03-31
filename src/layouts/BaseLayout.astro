@@ -7,6 +7,7 @@ interface Props {
 }
 
 const { title, description = 'Olinske by Zach Olinske. Signal Over Hype for enterprise AI, cloud resilience, and CTO operating models.' } = Astro.props;
+const currentPath = Astro.url.pathname;
 ---
 
 <!doctype html>
@@ -17,19 +18,54 @@ const { title, description = 'Olinske by Zach Olinske. Signal Over Hype for ente
     <meta name="description" content={description} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet" />
     <title>{title}</title>
     <script>
-      const saved = localStorage.getItem('theme') || 'executive';
+      const saved = localStorage.getItem('theme') || 'nordic-light';
       const url = new URL(window.location.href);
       const param = url.searchParams.get('theme');
-      const validThemes = ['executive', 'technical', 'forward', 'clarity', 'craft', 'operator', 'horizon'];
+      const validThemes = ['nordic-light', 'deep-cloud', 'high-contrast'];
       const theme = param && validThemes.includes(param) ? param : saved;
       document.documentElement.setAttribute('data-theme', theme);
       localStorage.setItem('theme', theme);
     </script>
   </head>
   <body>
+    <header class="site-header">
+      <div class="container nav-shell">
+        <a class="brand" href="/">
+          <span class="brand-mark">O</span>
+          <span class="brand-text">Olinske</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary">
+          <a class={currentPath === '/' ? 'nav-link is-active' : 'nav-link'} href="/">Home</a>
+          <a class={currentPath.startsWith('/posts') ? 'nav-link is-active' : 'nav-link'} href="/posts/">Articles</a>
+          <a class="nav-link" href="/#about">About</a>
+          <button id="lab-theme-toggle" class="lab-toggle" type="button" aria-label="Cycle color theme" title="Cycle Lab Themes">
+            <span aria-hidden="true">◐</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
     <slot />
+
+    <script>
+      const cycle = ['nordic-light', 'deep-cloud', 'high-contrast'];
+      const button = document.getElementById('lab-theme-toggle');
+      const setTheme = (theme: string) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+      };
+
+      if (button) {
+        button.addEventListener('click', () => {
+          const current = document.documentElement.getAttribute('data-theme') || cycle[0];
+          const index = cycle.indexOf(current);
+          const next = cycle[(index + 1) % cycle.length];
+          setTheme(next);
+        });
+      }
+    </script>
   </body>
 </html>
