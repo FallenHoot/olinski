@@ -12,400 +12,257 @@ interface Props {
   cards?: Card[];
 }
 
-const {
-  img_wisconsin,
-  img_mountains,
-  img_oslo,
-  cards = []
-} = Astro.props;
+const { img_wisconsin, img_mountains, img_oslo, cards = [] } = Astro.props;
 
 const displayCards = cards.length
   ? cards.slice(0, 3)
   : [
-      {
-        title: 'Architecting AI in the Loop',
-        description: 'A practical runbook for shipping AI systems with guardrails.',
-        href: '/posts/'
-      },
-      {
-        title: 'Resilient Cloud Decision Trees',
-        description: 'How to choose tradeoffs that survive Friday-night incidents.',
-        href: '/posts/'
-      },
-      {
-        title: 'Signal over Hype Patterns',
-        description: 'Proven patterns from real Azure delivery work.',
-        href: '/posts/'
-      }
+      { title: 'Architecting AI in the Loop', description: 'A practical runbook for shipping AI systems.', href: '/posts/' },
+      { title: 'Resilient Cloud Decision Trees', description: 'Choose tradeoffs that survive Friday-night incidents.', href: '/posts/' },
+      { title: 'Signal over Hype Patterns', description: 'Proven patterns from real Azure delivery work.', href: '/posts/' },
     ];
 ---
 
-<section class="hh-root" data-story-root aria-label="Origin to destination monolith journey">
-  <div class="hh-track" data-story-track>
-    <article class="hh-panel hh-panel-origin" data-story-panel>
-      <img class="hh-image hh-img-origin" src={img_wisconsin} alt="Wisconsin farm landscape" loading="eager" decoding="async" />
-      <div class="hh-origin-grain" aria-hidden="true"></div>
-
-      <div class="hh-glass hh-glass-origin">
-        <p class="hh-kicker">ORIGIN</p>
-        <h1>NORTHERN ROOTS.</h1>
-        <p class="hh-copy">I build cloud systems for Microsoft. I am building a life and a home in Norway. This is where the story starts.</p>
-      </div>
-
-      <p class="hh-scroll-cue" aria-hidden="true">SCROLL TO MOVE SIDEWAYS →</p>
-    </article>
-
-    <article class="hh-panel hh-panel-destination" data-story-panel>
-      <img class="hh-image hh-img-oslo" src={img_oslo} alt="Oslo skyline at sunset" loading="lazy" decoding="async" />
-      <img class="hh-image hh-img-mountains" src={img_mountains} alt="Norwegian mountain transition" loading="lazy" decoding="async" />
-      <div class="hh-oslo-overlay" aria-hidden="true"></div>
-
-      <div class="hh-glass hh-glass-destination" data-frost-layer>
-        <p class="hh-kicker">THE DESTINATION</p>
-        <h2>Signal Over Hype.</h2>
-        <p class="hh-copy">From Midwest grit to Nordic clarity. Strong systems, honest tradeoffs, and architecture that holds up in the real world.</p>
-      </div>
-
-      <div class="hh-card-grid">
-        {
-          displayCards.map((card) => (
-            <a class="hh-card" href={card.href}>
-              <p class="hh-card-eyebrow">TECHNICAL SCHEMATIC</p>
-              <h3>{card.title}</h3>
-              <p class="hh-card-desc">{card.description}</p>
-              <div class="hh-card-meta">
-                <p>Region: Norway East (Oslo)</p>
-                <p>Origin: US North Central (Wisconsin)</p>
-                <p>Status: Deployed</p>
-                <p>Provider: Azure</p>
-              </div>
-            </a>
-          ))
-        }
-      </div>
-
-      <div class="hh-monolith" data-monolith aria-hidden="true"></div>
-    </article>
+<div class="story-container" data-story-root>
+  <!-- Fixed background stage — images cross-fade as user scrolls DOWN -->
+  <div class="fixed-stage">
+    <div class="image-layer" data-img="wi" style={`background-image: url(${img_wisconsin})`}></div>
+    <div class="image-layer" data-img="no" style={`background-image: url(${img_mountains})`}></div>
+    <div class="image-layer" data-img="os" style={`background-image: url(${img_oslo})`}></div>
+    <div class="vignette"></div>
   </div>
-</section>
 
-<style is:global>
-  .hh-root {
-    --story-progress: 0;
+  <!-- Panel 1: Wisconsin / Foundry -->
+  <section class="story-panel" data-panel="wi">
+    <div class="panel-content">
+      <p class="panel-kicker">ORIGIN · US NORTH CENTRAL</p>
+      <h2>Northern Roots.</h2>
+      <p class="panel-body">
+        Wisconsin beginnings. $1,000 and a drive to build.
+        I build cloud systems for Microsoft. I am building a home in Norway.
+        This is how I cut through the hype to find the signal.
+      </p>
+      <p class="scroll-cue" aria-hidden="true">SCROLL DOWN ↓</p>
+    </div>
+  </section>
+
+  <!-- Panel 2: Mountains / The Crossing -->
+  <section class="story-panel" data-panel="no">
+    <div class="panel-content">
+      <p class="panel-kicker">THE CROSSING · THE ATLANTIC</p>
+      <h2>The Crossing.</h2>
+      <p class="panel-body">
+        Moving to the edge of the world. Finding home in the fjords.
+        Where noise fades and architecture gets simple.
+      </p>
+    </div>
+  </section>
+
+  <!-- Panel 3: Oslo / Destination -->
+  <section class="story-panel" data-panel="os">
+    <div class="panel-content">
+      <p class="panel-kicker">DESTINATION · NORWAY EAST (OSLO)</p>
+      <h2>Oslo Monolith.</h2>
+      <p class="panel-body">
+        Architecting for Microsoft. Building a life in the city.
+        Signal over hype. Every system should be explainable at 11 PM on a Friday.
+      </p>
+
+      <div class="card-grid">
+        {displayCards.map((card) => (
+          <a class="architect-card" href={card.href}>
+            <p class="card-eyebrow">TECHNICAL SCHEMATIC</p>
+            <h3>{card.title}</h3>
+            <p class="card-desc">{card.description}</p>
+            <div class="card-meta">
+              <p>Region: Norway East (Oslo)</p>
+              <p>Origin: US North Central (Wisconsin)</p>
+              <p>Status: Deployed</p>
+              <p>Provider: Azure</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  .story-container {
     position: relative;
-    min-height: 100vh;
-    overflow: hidden;
+    width: 100%;
   }
 
-  .hh-track {
-    display: flex;
-    width: 200vw;
-    height: 100vh;
-    will-change: transform;
-  }
-
-  .hh-panel {
+  /* ── Fixed background stage ────────────────────────────────────────── */
+  .fixed-stage {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
-    position: relative;
-    display: grid;
-    align-items: center;
     overflow: hidden;
-    padding: clamp(1rem, 2vw, 2rem);
+    z-index: -1;
   }
 
-  .hh-image {
+  .image-layer {
     position: absolute;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    will-change: opacity, transform;
+    filter: brightness(0.55);
+    transition: filter 260ms ease;
   }
 
-  .hh-img-origin {
-    transform: scale(1);
-    transform-origin: center center;
+  /* First image starts visible */
+  .image-layer[data-img="wi"] {
+    opacity: 1;
   }
 
-  .hh-origin-grain {
+  .vignette {
     position: absolute;
     inset: 0;
-    background:
-      radial-gradient(circle at 18% 22%, rgba(255, 107, 53, 0.26), transparent 45%),
-      linear-gradient(165deg, rgba(13, 13, 16, 0.32), rgba(0, 0, 0, 0.52));
-    mix-blend-mode: multiply;
+    background: radial-gradient(circle, transparent 20%, rgba(0, 0, 0, 0.4) 100%);
     pointer-events: none;
   }
 
-  .hh-img-oslo {
-    z-index: 1;
-  }
-
-  .hh-img-mountains {
-    z-index: 2;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  }
-
-  .hh-oslo-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    background: linear-gradient(160deg, rgba(7, 23, 46, 0.42), rgba(0, 0, 0, 0.5));
-    pointer-events: none;
-  }
-
-  .hh-glass {
+  /* ── Scroll panels ────────────────────────────────────────────────── */
+  .story-panel {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #f4f7ff;
     position: relative;
-    z-index: 6;
-    max-width: min(760px, 92vw);
-    border: 1px solid color-mix(in srgb, var(--border, #d6e3f2) 60%, transparent);
-    border-radius: 20px;
-    padding: clamp(1rem, 2vw, 1.8rem);
-    background: color-mix(in srgb, var(--surface, #ffffff) 30%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: var(--shadow, 0 14px 44px rgba(13, 35, 64, 0.16));
   }
 
-  .hh-glass-origin {
-    color: #f7f8fb;
-    border-color: rgba(255, 255, 255, 0.26);
-    background: rgba(22, 18, 16, 0.45);
+  .panel-content {
+    max-width: 860px;
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
   }
 
-  .hh-glass-destination {
-    color: #eaf4ff;
-  }
-
-  .hh-kicker {
-    margin: 0 0 0.4rem;
+  .panel-kicker {
+    margin: 0 0 0.5rem;
     font-family: var(--font-mono, Consolas, monospace);
     font-size: 0.74rem;
-    letter-spacing: 0.13em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+
+  .story-panel h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 10vw, 7.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
     text-transform: uppercase;
   }
 
-  .hh-glass h1,
-  .hh-glass h2 {
-    margin: 0;
-    font-family: var(--font-display);
-    letter-spacing: -0.03em;
-    line-height: 0.95;
+  .panel-body {
+    margin: 1rem 0 0;
+    font-size: clamp(1rem, 1.8vw, 1.25rem);
+    line-height: 1.6;
+    max-width: 56ch;
+    margin-inline: auto;
   }
 
-  .hh-glass h1 {
-    font-size: clamp(3rem, 10vw, 7.4rem);
-  }
-
-  .hh-glass h2 {
-    font-size: clamp(2rem, 7vw, 5.2rem);
-  }
-
-  .hh-copy {
-    margin: 0.85rem 0 0;
-    font-size: clamp(1rem, 1.7vw, 1.2rem);
-    line-height: 1.58;
-  }
-
-  .hh-scroll-cue {
-    position: absolute;
-    left: clamp(1rem, 3vw, 2rem);
-    bottom: clamp(1rem, 4vw, 2.5rem);
-    margin: 0;
-    z-index: 8;
+  .scroll-cue {
+    margin-top: 2rem;
     font-family: var(--font-mono, Consolas, monospace);
     font-size: 0.78rem;
     letter-spacing: 0.14em;
-    color: rgba(240, 245, 255, 0.86);
-    text-transform: uppercase;
+    opacity: 0.7;
   }
 
-  .hh-card-grid {
-    position: absolute;
-    left: clamp(1rem, 3vw, 2rem);
-    right: clamp(1rem, 3vw, 2rem);
-    bottom: clamp(1rem, 4vw, 2rem);
-    z-index: 7;
+  /* ── Architect cards ───────────────────────────────────────────────── */
+  .card-grid {
+    margin-top: 2rem;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.85rem;
+    text-align: left;
   }
 
-  .hh-card {
+  .architect-card {
     text-decoration: none;
     color: #e9f1ff;
     border-radius: 14px;
-    border: 1px solid rgba(173, 210, 255, 0.3);
-    background: rgba(10, 25, 46, 0.44);
-    box-shadow: 0 16px 42px rgba(5, 16, 31, 0.45);
+    border: 1px solid rgba(173, 210, 255, 0.28);
+    background: rgba(10, 25, 46, 0.52);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    padding: 0.8rem;
+    padding: 0.85rem;
     transition: transform 220ms ease, box-shadow 220ms ease;
   }
 
-  .hh-card:hover {
+  .architect-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 24px 58px rgba(5, 16, 31, 0.55);
+    box-shadow: 0 22px 52px rgba(5, 16, 31, 0.5);
   }
 
-  .hh-card-eyebrow,
-  .hh-card-meta p {
+  .card-eyebrow {
     margin: 0;
     font-family: var(--font-mono, Consolas, monospace);
-    letter-spacing: 0.05em;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    opacity: 0.8;
   }
 
-  .hh-card h3 {
-    margin: 0.45rem 0;
+  .architect-card h3 {
+    margin: 0.4rem 0;
     font-family: var(--font-display);
-    font-size: 1.08rem;
+    font-size: 1.05rem;
     line-height: 1.3;
   }
 
-  .hh-card-desc {
+  .card-desc {
     margin: 0;
-    color: #c7d6ef;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    color: #c2d4ee;
     line-height: 1.45;
   }
 
-  .hh-card-meta {
-    margin-top: 0.65rem;
-    padding-top: 0.55rem;
-    border-top: 1px dashed rgba(173, 210, 255, 0.32);
-    display: grid;
-    gap: 0.25rem;
+  .card-meta {
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(173, 210, 255, 0.3);
   }
 
-  .hh-monolith {
-    position: absolute;
-    right: clamp(1rem, 4vw, 3rem);
-    top: clamp(4rem, 9vh, 6rem);
-    width: min(180px, 24vw);
-    height: min(280px, 42vh);
-    border-radius: 18px;
-    z-index: 7;
-    background:
-      linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(34, 114, 216, 0.2) 45%, rgba(0, 0, 0, 0.72)),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 40%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 28px 64px rgba(0, 0, 0, 0.48);
-    transform: perspective(900px) rotateY(calc((var(--mx, 0.5) - 0.5) * 18deg)) rotateX(calc((0.5 - var(--my, 0.5)) * 14deg));
+  .card-meta p {
+    margin: 0;
+    font-family: var(--font-mono, Consolas, monospace);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    line-height: 1.55;
+  }
+
+  /* ── Theme-driven image grading ────────────────────────────────────── */
+  html[data-theme='fjord'] .image-layer {
+    filter: brightness(0.55) saturate(1.06) hue-rotate(-6deg);
+  }
+
+  html[data-theme='foundry'] .image-layer {
+    filter: brightness(0.5) saturate(1.1) sepia(0.14) hue-rotate(-18deg);
+  }
+
+  html[data-theme='midnight'] .image-layer {
+    filter: brightness(0.45) grayscale(1) contrast(1.2);
   }
 
   @media (max-width: 980px) {
-    .hh-card-grid {
+    .card-grid {
       grid-template-columns: 1fr;
-      position: static;
-      margin-top: 1rem;
     }
-
-    .hh-panel {
-      align-items: start;
-      padding-top: 5rem;
-    }
-
-    .hh-monolith {
-      display: none;
-    }
-  }
-
-  html[data-theme='fjord'] .hh-image {
-    filter: saturate(1.06) hue-rotate(-8deg) contrast(1.04);
-  }
-
-  html[data-theme='foundry'] .hh-image {
-    filter: saturate(1.1) sepia(0.14) hue-rotate(-18deg) contrast(1.05);
-  }
-
-  html[data-theme='midnight'] .hh-image {
-    filter: grayscale(1) contrast(1.2) brightness(0.82);
   }
 </style>
 
 <script>
-  import { gsap } from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
   import { initMonolithScroll } from '../scripts/gsap-horizontal-monolith';
-
-  gsap.registerPlugin(ScrollTrigger);
   initMonolithScroll();
-
-  const root = document.querySelector<HTMLElement>('[data-story-root]');
-  const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-story-panel]'));
-  const farmImage = document.querySelector<HTMLElement>('.hh-img-origin');
-  const mountainsImage = document.querySelector<HTMLElement>('.hh-img-mountains');
-  const monolith = document.querySelector<HTMLElement>('[data-monolith]');
-
-  if (root && panels.length >= 2) {
-    const st = ScrollTrigger.getById('monolith-horizontal-track');
-
-    if (st && st.animation) {
-      if (farmImage) {
-        gsap.fromTo(
-          farmImage,
-          { scale: 1 },
-          {
-            scale: 1.1,
-            ease: 'none',
-            scrollTrigger: {
-              containerAnimation: st.animation,
-              trigger: panels[0],
-              start: 'left left',
-              end: 'right left',
-              scrub: true,
-            },
-          },
-        );
-      }
-
-      if (mountainsImage) {
-        gsap.fromTo(
-          mountainsImage,
-          { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' },
-          {
-            clipPath: 'polygon(100% 0, 100% 0, 100% 100%, 100% 100%)',
-            ease: 'power2.out',
-            scrollTrigger: {
-              containerAnimation: st.animation,
-              trigger: panels[1],
-              start: 'left 95%',
-              end: 'left 35%',
-              scrub: true,
-            },
-          },
-        );
-      }
-    }
-
-    const onUpdateTheme = () => {
-      const progress = Number(root.style.getPropertyValue('--story-progress') || '0');
-      if (progress >= 0.52 && document.documentElement.getAttribute('data-theme') !== 'fjord') {
-        document.documentElement.setAttribute('data-theme', 'fjord');
-        localStorage.setItem('theme', 'fjord');
-      }
-    };
-
-    let rafId = 0;
-    const tick = () => {
-      onUpdateTheme();
-      rafId = window.requestAnimationFrame(tick);
-    };
-    rafId = window.requestAnimationFrame(tick);
-
-    if (monolith) {
-      const onPointer = (event: PointerEvent) => {
-        monolith.style.setProperty('--mx', (event.clientX / window.innerWidth).toFixed(3));
-        monolith.style.setProperty('--my', (event.clientY / window.innerHeight).toFixed(3));
-      };
-      document.addEventListener('pointermove', onPointer, { passive: true });
-
-      window.addEventListener('pagehide', () => {
-        window.cancelAnimationFrame(rafId);
-        document.removeEventListener('pointermove', onPointer);
-      });
-    }
-  }
 </script>

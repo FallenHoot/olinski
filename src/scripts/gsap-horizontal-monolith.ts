@@ -3,82 +3,67 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 let initialized = false;
 
+/**
+ * Vertical-scroll "melt" transition engine.
+ *
+ * Structure expected in the DOM:
+ *   [data-story-root]
+ *     .fixed-stage
+ *       [data-img="wi"]  — Wisconsin (starts visible)
+ *       [data-img="no"]  — Norway mountains
+ *       [data-img="os"]  — Oslo skyline
+ *     .story-panel[data-panel="wi"]
+ *     .story-panel[data-panel="no"]
+ *     .story-panel[data-panel="os"]
+ *
+ * User scrolls DOWN normally; the fixed background images
+ * cross-fade ("melt") as each panel enters the viewport.
+ */
 export const initMonolithScroll = (): void => {
   if (initialized || typeof window === 'undefined') return;
 
   const root = document.querySelector<HTMLElement>('[data-story-root]');
-  const track = root?.querySelector<HTMLElement>('[data-story-track]');
-  const panels = track?.querySelectorAll<HTMLElement>('[data-story-panel]');
-  const frostLayer = root?.querySelector<HTMLElement>('[data-frost-layer]');
-  const monolith = root?.querySelector<HTMLElement>('[data-monolith]');
+  if (!root) return;
 
-  if (!root || !track || !panels || panels.length < 2) return;
+  const images = {
+    wi: root.querySelector<HTMLElement>('[data-img="wi"]'),
+    no: root.querySelector<HTMLElement>('[data-img="no"]'),
+    os: root.querySelector<HTMLElement>('[data-img="os"]'),
+  };
+
+  if (!images.wi || !images.no || !images.os) return;
 
   initialized = true;
   gsap.registerPlugin(ScrollTrigger);
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reducedMotion) {
-    if (frostLayer) frostLayer.style.opacity = '0.52';
-    if (monolith) monolith.style.setProperty('--morph', '0.5');
+    // Show all layers at partial opacity so content is visible
+    images.wi.style.opacity = '1';
     return;
   }
 
-  const panelCount = panels.length;
-  const endDistance = () => Math.max(0, track.scrollWidth - window.innerWidth);
-
-  gsap.to(track, {
-    x: () => -endDistance(),
-    ease: 'none',
+  // Build a GSAP timeline pinned to the story container.
+  // Scrolling down cross-fades the fixed background images.
+  const tl = gsap.timeline({
     scrollTrigger: {
-      id: 'monolith-horizontal-track',
+      id: 'monolith-story',
       trigger: root,
       start: 'top top',
-      end: () => `+=${endDistance() + window.innerHeight * 1.2}`,
-      scrub: 0.75,
+      end: '+=300%',
+      scrub: 1,
       pin: true,
       anticipatePin: 1,
-      invalidateOnRefresh: true,
       onUpdate: (self) => {
         root.style.setProperty('--story-progress', self.progress.toFixed(4));
-
-        if (frostLayer) {
-          const fadeIn = gsap.utils.clamp(0, 1, (self.progress - 0.22) / 0.36);
-          frostLayer.style.opacity = String(fadeIn);
-          frostLayer.style.transform = `translateY(${(1 - fadeIn) * 18}px)`;
-        }
-
-        if (monolith) {
-          const phase = gsap.utils.clamp(0, 1, self.progress * (panelCount - 1));
-          monolith.style.setProperty('--scroll-morph', phase.toFixed(3));
-        }
-      }
-    }
+      },
+    },
   });
 
-  if (monolith) {
-    const onMove = (event: MouseEvent) => {
-      const bounds = monolith.getBoundingClientRect();
-      const x = gsap.utils.clamp(0, 1, (event.clientX - bounds.left) / bounds.width);
-      const y = gsap.utils.clamp(0, 1, (event.clientY - bounds.top) / bounds.height);
-      const mix = gsap.utils.clamp(0, 1, x * 0.7 + (1 - y) * 0.3);
-      monolith.style.setProperty('--mx', `${x}`);
-      monolith.style.setProperty('--my', `${y}`);
-      monolith.style.setProperty('--morph', mix.toFixed(3));
-    };
-
-    const onLeave = () => {
-      monolith.style.setProperty('--mx', '0.5');
-      monolith.style.setProperty('--my', '0.5');
-      monolith.style.setProperty('--morph', monolith.style.getPropertyValue('--scroll-morph') || '0.5');
-    };
-
-    monolith.addEventListener('mousemove', onMove);
-    monolith.addEventListener('mouseleave', onLeave);
-
-    window.addEventListener('pagehide', () => {
-      monolith.removeEventListener('mousemove', onMove);
-      monolith.removeEventListener('mouseleave', onLeave);
-    });
-  }
+  // Wisconsin → Norway mountains (melt transition)
+  tl.to(images.wi, { opacity: 0, scale: 1.1, duration: 1 })
+    .fromTo(images.no, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 1 }, '<')
+    // Norway mountains → Oslo skyline (melt transition)
+    .to(images.no, { opacity: 0, scale: 1.1, duration: 1 }, '+=0.5')
+    .fromTo(images.os, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 1 }, '<');
 };
