@@ -2,6 +2,7 @@
 import '../styles/theme-vars.css';
 import '../styles/global.css';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import CategoryMenu from '../components/CategoryMenu.astro';
 
 interface Props {
   title: string;
@@ -60,11 +61,13 @@ const currentPath = Astro.url.pathname;
           <a class={currentPath === '/' ? 'nav-link is-active' : 'nav-link'} href="/">Home</a>
           <a class={currentPath.startsWith('/posts') ? 'nav-link is-active' : 'nav-link'} href="/posts/">Articles</a>
           <a class="nav-link" href="/#about">About</a>
+          <button class="nav-link menu-btn" data-menu-btn type="button">Topics</button>
           <ThemeToggle />
         </nav>
       </div>
     </header>
 
     <slot />
+    <CategoryMenu />
   </body>
 </html>

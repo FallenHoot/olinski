@@ -113,6 +113,14 @@ a:hover {
   background: color-mix(in srgb, var(--surface-2) 80%, transparent);
 }
 
+/* Topics menu button in nav */
+button.menu-btn {
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--border);
+  font-family: var(--font-display);
+}
+
 .lab-toggle {
   border: 1px solid var(--border);
   background: var(--surface);
