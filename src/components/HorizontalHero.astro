@@ -24,30 +24,14 @@ const displayCards = cards.length
 ---
 
 <div class="montage" data-story-root>
-  <!-- ═══ Fixed cinematic image stage ════════════════════════════ -->
-  <div class="stage" data-stage>
-    <!-- Farm: focus on barn center-left -->
-    <picture class="layer-pic layer-farm">
-      <img class="layer story-image" src={img_farm} alt="Wisconsin farm landscape" width="1600" height="900" loading="eager" decoding="async" style="object-position: 50% 50%" />
-    </picture>
-    <!-- Voyage images: each with contextual focus -->
-    {voyage.map((src, i) => {
-      const positions = ['50% 50%', '50% 50%', '50% 50%', '50% 50%', '50% 50%'];
-      return (
-        <picture class={`layer-pic layer-voyage layer-v${i}`}>
-          <img class="layer story-image" src={src} alt={`Voyage era ${i + 1}`} width="1600" height="900" loading="lazy" decoding="async" style={`object-position: ${positions[i] || '50% 50%'}`} />
-        </picture>
-      );
-    })}
-    <!-- Oslo: focus on skyline at bottom -->
-    <picture class="layer-pic layer-oslo">
-      <img class="layer story-image" src={img_oslo} alt="Oslo skyline" width="1600" height="900" loading="lazy" decoding="async" style="object-position: 50% 100%" />
-    </picture>
-    <div class="fog"></div>
-    <div class="grain"></div>
-    <div class="vignette"></div>
-    <div class="grid-overlay"></div>
-  </div>
+  <!-- ═══ Three.js cinematic canvas (fixed behind text panels) ══ -->
+  <canvas
+    class="three-canvas"
+    data-three-canvas
+    data-farm={img_farm}
+    data-oslo={img_oslo}
+    data-voyage={JSON.stringify(voyage)}
+  ></canvas>
 
   <!-- ═══ Mapbox globe canvas (hidden until panel 4) ═════════════ -->
   <div class="globe-stage" data-globe-stage>
@@ -142,119 +126,14 @@ const displayCards = cards.length
     align-items: center;
   }
 
-  /* ═══ Fixed image stage ════════════════════════════════════════ */
-  .stage { position: fixed; inset: 0; overflow: hidden; z-index: 1; }
-
-  .layer-pic {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    overflow: hidden;
-  }
-
-  .layer {
-    display: block;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    background: #000;
-    will-change: opacity, transform;
-    /* Keep motion subtle so low-res assets do not look artificially zoomed */
-    animation: slow-pan 28s infinite alternate ease-in-out;
-  }
-
-  .story-image {
-    position: absolute;
-    top: 0;
-    left: 0;
+  /* ═══ Three.js fixed canvas ═══════════════════════════════════ */
+  .three-canvas {
+    position: fixed;
+    inset: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-  }
-
-  @keyframes slow-pan {
-    from { transform: scale(1); }
-    to   { transform: scale(1.001); }
-  }
-
-  .fog {
-    position: absolute;
-    inset: -8%;
+    z-index: 1;
     pointer-events: none;
-    z-index: 2;
-    background:
-      radial-gradient(ellipse 70% 55% at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 24%, rgba(8,16,28,0.22) 62%, rgba(2,6,12,0.45) 100%),
-      radial-gradient(ellipse 90% 75% at 50% 60%, rgba(130,170,210,0.14) 0%, rgba(10,18,30,0.04) 48%, transparent 70%);
-    filter: blur(20px);
-    opacity: 0.62;
-  }
-
-  .layer-farm { opacity: 1; }
-  .layer-farm .layer { filter: brightness(0.5) sepia(0.18) saturate(0.9); }
-  .layer-voyage { opacity: 0; }
-  .layer-voyage {
-    /* 25% visual size: 37.5% inset on each side */
-    inset: 37.5%;
-  }
-  .layer-voyage .layer {
-    object-fit: contain;
-    object-position: 50% 50%;
-    filter: brightness(0.48) sepia(0.28) saturate(0.78);
-  }
-  .layer-oslo { opacity: 0; }
-  .layer-oslo .layer { filter: brightness(0.5); }
-
-  /* Mobile: shift focus points for portrait screens (9:16) */
-  @media (max-aspect-ratio: 3/4) {
-    /* Z-AXIS DEPTH: subject in middle 40%, sky top 30%, text bottom 30% */
-
-    /* Farm: focus tight on barn, let fields fall away */
-    .layer-farm .layer  { object-position: 50% 50%; }
-
-    /* Ship layers: imposing, heading toward top of screen */
-    .layer-voyage {
-      inset: 37.5%;
-    }
-    .layer-v0 .layer { object-position: 50% 50%; } /* Colonial ship */
-    .layer-v1 .layer { object-position: 50% 50%; } /* Warship sketch */
-    .layer-v2 .layer { object-position: 50% 50%; } /* Clipper */
-    .layer-v3 .layer { object-position: 50% 50%; } /* Steamship */
-    .layer-v4 .layer { object-position: 50% 50%; } /* SAS 737 */
-
-    /* Oslo: architecture weighted to bottom, sky fills top */
-    .layer-oslo .layer { object-position: 50% 100%; }
-
-    /* Heavier "Montfort Mist" for text contrast on mobile */
-    .vignette {
-      background:
-        linear-gradient(180deg, rgba(0,0,0,0.25) 0%, transparent 35%, transparent 55%, rgba(0,0,0,0.6) 100%),
-        radial-gradient(ellipse 80% 80% at center, transparent 15%, rgba(0,0,0,0.72) 100%);
-    }
-
-    .grain { opacity: 0.38; }
-    .fog { opacity: 0.64; }
-
-    /* Text trays: anchor to bottom 30% of viewport */
-    .panel { align-items: flex-end; padding-bottom: env(safe-area-inset-bottom, 1.5rem); }
-    .tray { margin-bottom: clamp(1rem, 4vh, 2.5rem); max-width: 100%; }
-    .tray-left, .tray-right { margin-left: 0.75rem; margin-right: 0.75rem; }
-  }
-
-  .grain {
-    position: absolute; inset: 0; opacity: 0.12;
-    mix-blend-mode: overlay; pointer-events: none;
-    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-    background-size: 200px;
-  }
-
-  .vignette {
-    position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse 72% 70% at center, transparent 36%, rgba(0,0,0,0.54) 100%);
-  }
-
-  .grid-overlay {
-    display: none;
-    position: absolute; inset: 0; pointer-events: none; opacity: 0;
-    background-image: radial-gradient(circle, rgba(77,163,255,0.16) 1px, transparent 1px);
-    background-size: 32px 32px;
   }
 
   /* ═══ Mapbox globe stage ═══════════════════════════════════════ */
@@ -364,11 +243,12 @@ const displayCards = cards.length
   .card-ledger { margin-top: 0.5rem; padding-top: 0.45rem; border-top: 0; }
   .card-ledger p { margin: 0; font-family: var(--font-mono, Consolas, monospace); font-size: 0.66rem; letter-spacing: 0.05em; line-height: 1.55; opacity: 0.78; }
 
-  /* ═══ Theme tinting ═══════════════════════════════════════════ */
-  html[data-theme='foundry'] .layer-farm .layer,
-  html[data-theme='foundry'] .layer-voyage .layer { filter: brightness(0.42) sepia(0.45) saturate(1.0) hue-rotate(-12deg); }
-  html[data-theme='fjord'] .layer-oslo .layer { filter: brightness(0.52) saturate(1.1) hue-rotate(-8deg); }
-  html[data-theme='midnight'] .layer { filter: brightness(0.38) grayscale(1) contrast(1.22); }
+  /* ═══ Mobile layout ═══════════════════════════════════════════ */
+  @media (max-aspect-ratio: 3/4) {
+    .panel { align-items: flex-end; padding-bottom: env(safe-area-inset-bottom, 1.5rem); }
+    .tray { margin-bottom: clamp(1rem, 4vh, 2.5rem); max-width: 100%; }
+    .tray-left, .tray-right { margin-left: 0.75rem; margin-right: 0.75rem; }
+  }
 
   @media (max-width: 980px) {
     .tray-left, .tray-right { margin-left: 1rem; margin-right: 1rem; max-width: 100%; }
@@ -391,7 +271,6 @@ const displayCards = cards.length
     .card { padding: 0.7rem; }
     .card h3 { font-size: 0.9rem; }
     .rail { width: 2px; }
-    .layer { animation-duration: 30s; } /* Slower on mobile */
   }
 
   /* Large / ultrawide screens */
@@ -422,7 +301,7 @@ const displayCards = cards.length
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .layer, .grain, .vignette, .grid-overlay, .globe-stage { transition: none !important; animation: none !important; }
+    .globe-stage { transition: none !important; animation: none !important; }
   }
 </style>
 
@@ -430,196 +309,185 @@ const displayCards = cards.length
   import { gsap } from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   import Lenis from 'lenis';
+  import { SceneController } from '../scripts/scene-controller';
   gsap.registerPlugin(ScrollTrigger);
 
   // ── ① Lenis virtual scroll — single RAF source, premium-heavy feel ──
-  // Feed Lenis delta into GSAP's own ticker so there is exactly one RAF loop.
-  // Do NOT call requestAnimationFrame anywhere else in this file.
   const lenis = new Lenis({ lerp: 0.1, syncTouch: false });
   gsap.ticker.add((time) => lenis.raf(time * 1000));
   gsap.ticker.lagSmoothing(0);
-  // Sync Lenis scroll events → ScrollTrigger position reads
   lenis.on('scroll', () => ScrollTrigger.update());
-  // After GSAP pin extends document height, tell Lenis the new scroll range
   ScrollTrigger.addEventListener('refresh', () => lenis.resize());
 
   const root       = document.querySelector<HTMLElement>('[data-story-root]');
-  const stage      = document.querySelector<HTMLElement>('[data-stage]');
+  const canvas     = document.querySelector<HTMLCanvasElement>('[data-three-canvas]');
   const globeStage = document.querySelector<HTMLElement>('[data-globe-stage]');
   const globeEl    = document.querySelector<HTMLElement>('[data-globe-el]');
-  const farm       = document.querySelector<HTMLElement>('.layer-farm');
-  const voyages    = Array.from(document.querySelectorAll<HTMLElement>('.layer-voyage'));
-  const oslo       = document.querySelector<HTMLElement>('.layer-oslo');
-  const grain      = document.querySelector<HTMLElement>('.grain');
-  const vig        = document.querySelector<HTMLElement>('.vignette');
-  const grid       = document.querySelector<HTMLElement>('.grid-overlay');
   const coordEl    = document.querySelector<HTMLElement>('[data-coord]');
   const railEl     = document.querySelector<HTMLElement>('[data-rail]');
 
-  // ── Diagnostic image swap ─────────────────────────────────────────
-  const params = new URLSearchParams(window.location.search);
-  const useDiagImages = params.get('diagImages') === '1';
+  if (root && canvas) {
+    // Parse image paths from data attributes
+    const farmPath    = canvas.dataset.farm!;
+    const osloPath    = canvas.dataset.oslo!;
+    const voyagePaths: string[] = JSON.parse(canvas.dataset.voyage || '[]');
 
-  if (useDiagImages) {
-    const farmImg    = document.querySelector<HTMLImageElement>('.layer-farm .layer');
-    const osloImg    = document.querySelector<HTMLImageElement>('.layer-oslo .layer');
-    const voyageImgs = Array.from(document.querySelectorAll<HTMLImageElement>('.layer-voyage .layer'));
-
-    if (farmImg) { farmImg.src = 'https://picsum.photos/id/1040/2560/1440'; farmImg.style.objectPosition = '50% 50%'; }
-
-    const diagVoyage = [
-      'https://picsum.photos/id/1011/2560/1440',
-      'https://picsum.photos/id/1015/2560/1440',
-      'https://picsum.photos/id/1016/2560/1440',
-      'https://picsum.photos/id/1020/2560/1440',
-      'https://picsum.photos/id/1039/2560/1440',
+    const images = [
+      { key: 'farm', path: farmPath },
+      ...voyagePaths.map((p: string, i: number) => ({ key: `voyage${i}`, path: p })),
+      { key: 'oslo', path: osloPath },
     ];
-    voyageImgs.forEach((img, i) => { img.src = diagVoyage[i % diagVoyage.length]; img.style.objectPosition = '50% 50%'; });
 
-    if (osloImg) { osloImg.src = 'https://picsum.photos/id/1012/2560/1440'; osloImg.style.objectPosition = '50% 100%'; }
-  }
+    // ── ② Three.js scene — LoadingManager gate ───────────────────
+    const sc = new SceneController(canvas);
 
-  // ── Coordinates ───────────────────────────────────────────────────
-  const WI   = { lat: 45.36, lng: -91.84 };
-  const OSLO = { lat: 59.91, lng: 10.75 };
+    sc.load(images).then(() => {
+      const voyageCount = voyagePaths.length;
 
-  if (root && farm) {
-    const voyageCount = voyages.length;
+      // ── ③ Progress variable — closure, zero DOM overhead ────────
+      let scrollProgress    = 0;
+      let displayedProgress = 0;
 
-    // ── ② Direct progress variable — eliminates DOM round-trip ────
-    // scrollProgress is written by ScrollTrigger.onUpdate (no CSS property).
-    // displayedProgress is the LERP'd version used for the coord badge.
-    let scrollProgress   = 0;
-    let displayedProgress = 0;
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: root,
-        start: 'top top',
-        end: '+=600%',
-        scrub: 1,
-        pin: true,
-        anticipatePin: 1,
-        onUpdate: (self) => {
-          // Write directly to closure variable — zero DOM overhead
-          scrollProgress = self.progress;
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: root,
+          start: 'top top',
+          end: '+=600%',
+          scrub: 1,
+          pin: true,
+          anticipatePin: 1,
+          onUpdate: (self) => { scrollProgress = self.progress; },
         },
-      },
-    });
+      });
 
-    // ── Panel 1: Farm ────────────────────────────────────────────
-    tl.fromTo(farm, { scale: 1 }, { scale: 1.003, duration: 1.5 })
-      .to(farm, { opacity: 0, duration: 0.8 }, 0.8);
+      // ── Panel 1: Farm ──────────────────────────────────────────
+      tl.fromTo(sc.scale('farm'), { value: 1 }, { value: 1.003, duration: 1.5 });
+      tl.to(sc.opacity('farm'), { value: 0, duration: 0.8 }, 0.8);
 
-    // ── Panel 2: Voyage montage ───────────────────────────────────
-    const voyageDur   = 2.0;
-    const perImage    = voyageCount > 0 ? voyageDur / voyageCount : voyageDur;
-    const voyageStart = 0.8;
+      // ── Panel 2: Voyage montage ────────────────────────────────
+      const voyageDur   = 2.0;
+      const perImage    = voyageCount > 0 ? voyageDur / voyageCount : voyageDur;
+      const voyageStart = 0.8;
 
-    voyages.forEach((v, i) => {
-      tl.fromTo(v,
-        { opacity: 0, scale: 1 },
-        { opacity: 1, scale: 1.003, duration: perImage * 0.7 },
-        voyageStart + i * perImage
-      );
-      if (i < voyageCount - 1) {
-        tl.to(v, { opacity: 0, duration: perImage * 0.35 }, voyageStart + (i + 0.65) * perImage);
-      } else {
-        tl.to(v, { opacity: 0, duration: perImage * 0.4 }, voyageStart + voyageDur - perImage * 0.2);
-      }
-    });
+      for (let i = 0; i < voyageCount; i++) {
+        const key = `voyage${i}`;
+        tl.fromTo(sc.opacity(key),
+          { value: 0 },
+          { value: 1, duration: perImage * 0.7 },
+          voyageStart + i * perImage,
+        );
+        tl.fromTo(sc.scale(key),
+          { value: 1 },
+          { value: 1.003, duration: perImage * 0.7 },
+          voyageStart + i * perImage,
+        );
 
-    tl.to(grain, { opacity: 0,    duration: 1 }, voyageStart + voyageDur * 0.5);
-    tl.to(vig,   { opacity: 0.25, duration: 1 }, voyageStart + voyageDur * 0.6);
-
-    // ── Panel 3: Oslo ─────────────────────────────────────────────
-    const osloStart = voyageStart + voyageDur + 0.2;
-    tl.fromTo(oslo, { opacity: 0, scale: 1 }, { opacity: 1, scale: 1.003, duration: 1.2 }, osloStart);
-    tl.to(grid, { opacity: 0.7, duration: 0.8 }, osloStart + 0.5);
-
-    // ── Panel 4: Globe ────────────────────────────────────────────
-    const globeStart = osloStart + 1.8;
-    if (stage) tl.to(stage, { opacity: 0, duration: 0.6 }, globeStart);
-    if (globeStage) tl.to(globeStage, { opacity: 1, duration: 0.6 }, globeStart + 0.1);
-
-    // ── ③ Single ticker loop — no competing requestAnimationFrame ─
-    let mapInstance: any = null;
-    let mapReady   = false;
-    let hasFiredFly = false;
-
-    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-    const tick = () => {
-      // LERP displayedProgress toward the GSAP-scrubbed scrollProgress.
-      // This gives the coord badge its own independent liquid feel at lerp=0.12.
-      displayedProgress = lerp(displayedProgress, scrollProgress, 0.12);
-
-      // Progress rail (LERP'd for smoothness)
-      if (railEl) railEl.style.height = `${(displayedProgress * 100).toFixed(1)}%`;
-
-      // Coordinate readout
-      if (coordEl) {
-        const lat = lerp(WI.lat, OSLO.lat, displayedProgress);
-        const lng = lerp(WI.lng, OSLO.lng, displayedProgress);
-        coordEl.textContent =
-          `${Math.abs(lat).toFixed(1)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(1)}° ${lng >= 0 ? 'E' : 'W'}`;
-      }
-
-      // Globe threshold uses raw scrollProgress (binary switch, LERP not needed)
-      if (globeStage) {
-        if (scrollProgress >= 0.72) {
-          globeStage.classList.add('is-active');
-          if (mapReady && !hasFiredFly && mapInstance) {
-            hasFiredFly = true;
-            mapInstance.flyTo({ center: [OSLO.lng, OSLO.lat], zoom: 10, pitch: 45, bearing: -17.6, duration: 8000, essential: true });
-          }
+        if (i < voyageCount - 1) {
+          tl.to(sc.opacity(key), { value: 0, duration: perImage * 0.35 }, voyageStart + (i + 0.65) * perImage);
         } else {
-          globeStage.classList.remove('is-active');
-          hasFiredFly = false;
+          tl.to(sc.opacity(key), { value: 0, duration: perImage * 0.4 }, voyageStart + voyageDur - perImage * 0.2);
         }
       }
-    };
 
-    // Register with GSAP ticker — not window.scroll, not a separate RAF
-    gsap.ticker.add(tick);
+      // ── Panel 3: Oslo ──────────────────────────────────────────
+      const osloStart = voyageStart + voyageDur + 0.2;
+      tl.fromTo(sc.opacity('oslo'), { value: 0 }, { value: 1, duration: 1.2 }, osloStart);
+      tl.fromTo(sc.scale('oslo'), { value: 1 }, { value: 1.003, duration: 1.2 }, osloStart);
+      tl.to(sc.grid('oslo'), { value: 0.7, duration: 0.8 }, osloStart + 0.5);
 
-    // ── ④ Mapbox Globe — disposed correctly on navigation ─────────
-    const initGlobe = async () => {
-      if (!globeEl) return;
-      try {
-        const mapboxgl = (await import('mapbox-gl')).default;
-        const token = (import.meta as any).env?.PUBLIC_MAPBOX_TOKEN
-          || 'pk.eyJ1Ijoib2xpbnNrZSIsImEiOiJjbHh4eHh4eHgwMDAwMGpxZzh4eHh4eHh4In0.placeholder';
-        mapboxgl.accessToken = token;
-        mapInstance = new mapboxgl.Map({
-          container: globeEl,
-          style: 'mapbox://styles/mapbox/satellite-v9',
-          projection: 'globe' as any,
-          center: [WI.lng, WI.lat],
-          zoom: 4, pitch: 55, bearing: 30,
-          interactive: false,
-        });
-        mapInstance.on('style.load', () => {
-          mapInstance.setFog({ range: [0.5, 10], color: '#020818', 'high-color': '#0a1832', 'horizon-blend': 0.08, 'space-color': '#000000', 'star-intensity': 0.3 });
-          mapReady = true;
-        });
-      } catch (e) {
-        console.warn('Mapbox GL failed to initialize:', e);
-      }
-    };
-    initGlobe();
+      // ── Panel 4: Globe transition ──────────────────────────────
+      const globeStart = osloStart + 1.8;
+      tl.to(canvas, { opacity: 0, duration: 0.6 }, globeStart);
+      if (globeStage) tl.to(globeStage, { opacity: 1, duration: 0.6 }, globeStart + 0.1);
 
-    // ── ⑤ Cleanup — prevents WebGL context leak on SPA navigation ─
-    const cleanup = () => {
-      gsap.ticker.remove(tick);
-      ScrollTrigger.getAll().forEach((t) => t.kill());
-      if (mapInstance) { mapInstance.remove(); mapInstance = null; }
-      lenis.destroy();
-    };
-    // Astro view-transitions fires this before DOM swap
-    document.addEventListener('astro:before-swap', cleanup, { once: true });
-    // Fallback for hard unload / back-button
-    window.addEventListener('pagehide', cleanup, { once: true });
+      // ── ④ Single ticker loop ───────────────────────────────────
+      const WI   = { lat: 45.36, lng: -91.84 };
+      const OSLO = { lat: 59.91, lng: 10.75 };
+      let mapInstance: any = null;
+      let mapReady   = false;
+      let hasFiredFly = false;
+
+      const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+      const tick = () => {
+        displayedProgress = lerp(displayedProgress, scrollProgress, 0.12);
+
+        if (railEl) railEl.style.height = `${(displayedProgress * 100).toFixed(1)}%`;
+
+        if (coordEl) {
+          const lat = lerp(WI.lat, OSLO.lat, displayedProgress);
+          const lng = lerp(WI.lng, OSLO.lng, displayedProgress);
+          coordEl.textContent =
+            `${Math.abs(lat).toFixed(1)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(1)}° ${lng >= 0 ? 'E' : 'W'}`;
+        }
+
+        if (globeStage) {
+          if (scrollProgress >= 0.72) {
+            globeStage.classList.add('is-active');
+            if (mapReady && !hasFiredFly && mapInstance) {
+              hasFiredFly = true;
+              mapInstance.flyTo({
+                center: [OSLO.lng, OSLO.lat], zoom: 10, pitch: 45,
+                bearing: -17.6, duration: 8000, essential: true,
+              });
+            }
+          } else {
+            globeStage.classList.remove('is-active');
+            hasFiredFly = false;
+          }
+        }
+
+        // Render Three.js scene
+        sc.tick();
+      };
+
+      gsap.ticker.add(tick);
+
+      // ── Resize handler ─────────────────────────────────────────
+      const onResize = () => sc.resize();
+      window.addEventListener('resize', onResize);
+
+      // ── ⑤ Mapbox Globe ─────────────────────────────────────────
+      const initGlobe = async () => {
+        if (!globeEl) return;
+        try {
+          const mapboxgl = (await import('mapbox-gl')).default;
+          const token = (import.meta as any).env?.PUBLIC_MAPBOX_TOKEN
+            || 'pk.eyJ1Ijoib2xpbnNrZSIsImEiOiJjbHh4eHh4eHgwMDAwMGpxZzh4eHh4eHh4In0.placeholder';
+          mapboxgl.accessToken = token;
+          mapInstance = new mapboxgl.Map({
+            container: globeEl,
+            style: 'mapbox://styles/mapbox/satellite-v9',
+            projection: 'globe' as any,
+            center: [WI.lng, WI.lat],
+            zoom: 4, pitch: 55, bearing: 30,
+            interactive: false,
+          });
+          mapInstance.on('style.load', () => {
+            mapInstance.setFog({
+              range: [0.5, 10], color: '#020818', 'high-color': '#0a1832',
+              'horizon-blend': 0.08, 'space-color': '#000000', 'star-intensity': 0.3,
+            });
+            mapReady = true;
+          });
+        } catch (e) {
+          console.warn('Mapbox GL failed to initialize:', e);
+        }
+      };
+      initGlobe();
+
+      // ── ⑥ Cleanup — prevents WebGL context leak ────────────────
+      const cleanup = () => {
+        gsap.ticker.remove(tick);
+        ScrollTrigger.getAll().forEach((t) => t.kill());
+        window.removeEventListener('resize', onResize);
+        if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+        sc.dispose();
+        lenis.destroy();
+      };
+      document.addEventListener('astro:before-swap', cleanup, { once: true });
+      window.addEventListener('pagehide', cleanup, { once: true });
+    });
   }
 </script>
 
