@@ -353,45 +353,53 @@ const displayCards = cards.length
         },
       });
 
-      // ── Panel 1: Farm ──────────────────────────────────────────
-      tl.fromTo(sc.scale('farm'), { value: 1 }, { value: 1.003, duration: 1.5 });
-      tl.to(sc.opacity('farm'), { value: 0, duration: 0.8 }, 0.8);
+      // ── Timeline — synced to 4 scroll panels ─────────────────
+      // 600% total height → each panel ~25% of progress
+      // Panel 1 (0–25%):    Farm visible
+      // Panel 2 (25–50%):   Voyage images cycle
+      // Panel 3 (50–75%):   Oslo visible
+      // Panel 4 (75–100%):  Globe visible
 
-      // ── Panel 2: Voyage montage ────────────────────────────────
-      const voyageDur   = 2.0;
+      // ── Panel 1: Farm (t = 0 → 1.5) ───────────────────────────
+      tl.fromTo(sc.scale('farm'), { value: 1 }, { value: 1.006, duration: 1.5 });
+      tl.to(sc.opacity('farm'), { value: 0, duration: 0.4 }, 1.1);
+
+      // ── Panel 2: Voyage montage (t = 1.5 → 3.0) ───────────────
+      const voyageDur   = 1.5;
       const perImage    = voyageCount > 0 ? voyageDur / voyageCount : voyageDur;
-      const voyageStart = 0.8;
+      const voyageStart = 1.5;
 
       for (let i = 0; i < voyageCount; i++) {
         const key = `voyage${i}`;
         tl.fromTo(sc.opacity(key),
           { value: 0 },
-          { value: 1, duration: perImage * 0.7 },
+          { value: 1, duration: perImage * 0.6 },
           voyageStart + i * perImage,
         );
         tl.fromTo(sc.scale(key),
           { value: 1 },
-          { value: 1.003, duration: perImage * 0.7 },
+          { value: 1.004, duration: perImage },
           voyageStart + i * perImage,
         );
 
         if (i < voyageCount - 1) {
-          tl.to(sc.opacity(key), { value: 0, duration: perImage * 0.35 }, voyageStart + (i + 0.65) * perImage);
+          tl.to(sc.opacity(key), { value: 0, duration: perImage * 0.4 }, voyageStart + (i + 0.6) * perImage);
         } else {
-          tl.to(sc.opacity(key), { value: 0, duration: perImage * 0.4 }, voyageStart + voyageDur - perImage * 0.2);
+          tl.to(sc.opacity(key), { value: 0, duration: 0.3 }, voyageStart + voyageDur - 0.1);
         }
       }
 
-      // ── Panel 3: Oslo ──────────────────────────────────────────
-      const osloStart = voyageStart + voyageDur + 0.2;
-      tl.fromTo(sc.opacity('oslo'), { value: 0 }, { value: 1, duration: 1.2 }, osloStart);
-      tl.fromTo(sc.scale('oslo'), { value: 1 }, { value: 1.003, duration: 1.2 }, osloStart);
-      tl.to(sc.grid('oslo'), { value: 0.7, duration: 0.8 }, osloStart + 0.5);
+      // ── Panel 3: Oslo (t = 3.0 → 4.5) ─────────────────────────
+      const osloStart = 3.0;
+      tl.fromTo(sc.opacity('oslo'), { value: 0 }, { value: 1, duration: 0.5 }, osloStart);
+      tl.fromTo(sc.scale('oslo'), { value: 1 }, { value: 1.004, duration: 1.5 }, osloStart);
+      tl.to(sc.grid('oslo'), { value: 0.5, duration: 0.6 }, osloStart + 0.6);
 
-      // ── Panel 4: Globe transition ──────────────────────────────
-      const globeStart = osloStart + 1.8;
-      tl.to(canvas, { opacity: 0, duration: 0.6 }, globeStart);
-      if (globeStage) tl.to(globeStage, { opacity: 1, duration: 0.6 }, globeStart + 0.1);
+      // ── Panel 4: Globe transition (t = 4.5 → 6.0) ─────────────
+      const globeStart = 4.5;
+      tl.to(sc.opacity('oslo'), { value: 0, duration: 0.3 }, globeStart - 0.2);
+      tl.to(canvas, { opacity: 0, duration: 0.4 }, globeStart);
+      if (globeStage) tl.to(globeStage, { opacity: 1, duration: 0.5 }, globeStart + 0.1);
 
       // ── ④ Single ticker loop ───────────────────────────────────
       const WI   = { lat: 45.36, lng: -91.84 };

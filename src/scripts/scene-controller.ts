@@ -56,21 +56,37 @@ void main() {
   // Cover-fit mapping
   vec2 texUv = coverUV(uv);
 
+  // ── Depth-of-field: blur edges, sharp center ──
+  // Sample offsets for cheap radial blur
+  float dist = length(vUv - 0.5) * 2.0; // 0 at center, 1 at edge
+  float blur = smoothstep(0.3, 0.9, dist) * 0.004; // blur radius ramps at edges
   vec4 tex = texture2D(uTexture, texUv);
+  if (blur > 0.0001) {
+    // 8-tap radial blur for depth-of-field effect
+    tex += texture2D(uTexture, texUv + vec2( blur,  0.0));
+    tex += texture2D(uTexture, texUv + vec2(-blur,  0.0));
+    tex += texture2D(uTexture, texUv + vec2( 0.0,  blur));
+    tex += texture2D(uTexture, texUv + vec2( 0.0, -blur));
+    tex += texture2D(uTexture, texUv + vec2( blur,  blur) * 0.707);
+    tex += texture2D(uTexture, texUv + vec2(-blur,  blur) * 0.707);
+    tex += texture2D(uTexture, texUv + vec2( blur, -blur) * 0.707);
+    tex += texture2D(uTexture, texUv + vec2(-blur, -blur) * 0.707);
+    tex /= 9.0;
+  }
 
-  // ── Vignette ──
+  // ── Heavy vignette — cinematic letterbox feel ──
   vec2 center = vUv - 0.5;
-  float vig = 1.0 - dot(center, center) * 1.6;
-  vig = smoothstep(0.0, 1.0, vig);
+  float vig = 1.0 - dot(center, center) * 2.4;
+  vig = smoothstep(-0.1, 0.8, vig);
 
-  // ── Film grain ──
-  float grain = hash(vUv * 1000.0 + fract(uTime * 0.1)) * 0.06 - 0.03;
+  // ── Subtle film grain ──
+  float grain = hash(vUv * 1000.0 + fract(uTime * 0.1)) * 0.04 - 0.02;
 
-  // ── Color grading: desaturate + darken for cinematic feel ──
+  // ── Color grading: warm shadows, desaturate, darken ──
   float luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
-  vec3 graded = mix(vec3(luma), tex.rgb, 0.78);
-  graded *= vec3(1.04, 0.99, 0.93);
-  graded *= 0.55;
+  vec3 graded = mix(vec3(luma), tex.rgb, 0.72);
+  graded *= vec3(1.06, 0.98, 0.90); // warm tint
+  graded *= 0.50; // darken for text contrast
 
   // ── Procedural grid overlay (Oslo section) ──
   if (uGrid > 0.01) {
@@ -94,7 +110,7 @@ void main() {
   pos.y += sin(uTime * 0.3 + position.x * 10.0) * 0.05;
   pos.x += cos(uTime * 0.2 + position.z * 8.0) * 0.03;
   vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-  gl_PointSize = aSize * (300.0 / -mvPos.z);
+  gl_PointSize = aSize * (80.0 / -mvPos.z);
   gl_Position = projectionMatrix * mvPos;
 }
 `;
@@ -312,7 +328,7 @@ export class SceneController {
   }
 
   private initParticles(): void {
-    const count = 400;
+    const count = 120;
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
 
@@ -320,7 +336,7 @@ export class SceneController {
       positions[i * 3] = (Math.random() - 0.5) * 16;
       positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
       positions[i * 3 + 2] = Math.random() * (this.CAM_Z - 0.5) + 0.2;
-      sizes[i] = Math.random() * 2 + 0.5;
+      sizes[i] = Math.random() * 1.2 + 0.3;
     }
 
     const geo = new THREE.BufferGeometry();
@@ -330,7 +346,7 @@ export class SceneController {
     this.particleMat = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
-        uOpacity: { value: 0.2 },
+        uOpacity: { value: 0.08 },
       },
       vertexShader: PARTICLE_VERT,
       fragmentShader: PARTICLE_FRAG,
