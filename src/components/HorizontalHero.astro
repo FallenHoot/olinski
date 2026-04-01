@@ -150,10 +150,36 @@ const displayCards = cards.length
   .layer-oslo { opacity: 0; }
   .layer-oslo .layer { filter: brightness(0.5); }
 
-  /* Mobile: shift focus points for portrait screens */
+  /* Mobile: shift focus points for portrait screens (9:16) */
   @media (max-aspect-ratio: 3/4) {
-    .layer-farm .layer  { object-position: 35% 50%; }
-    .layer-oslo .layer  { object-position: 50% 80%; }
+    /* Z-AXIS DEPTH: subject in middle 40%, sky top 30%, text bottom 30% */
+
+    /* Farm: focus tight on barn, let fields fall away */
+    .layer-farm .layer  { object-position: 35% 45%; }
+
+    /* Ship layers: imposing, heading toward top of screen */
+    .layer-v0 .layer { object-position: 50% 55%; } /* Colonial ship */
+    .layer-v1 .layer { object-position: 50% 48%; } /* Warship sketch */
+    .layer-v2 .layer { object-position: 50% 52%; } /* Clipper */
+    .layer-v3 .layer { object-position: 45% 46%; } /* Steamship - center funnels */
+    .layer-v4 .layer { object-position: 55% 35%; } /* SAS 737 - wing curve focus */
+
+    /* Oslo: architecture weighted to bottom, sky fills top */
+    .layer-oslo .layer { object-position: 50% 82%; }
+
+    /* Heavier "Montfort Mist" for text contrast on mobile */
+    .vignette {
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.25) 0%, transparent 35%, transparent 55%, rgba(0,0,0,0.6) 100%),
+        radial-gradient(ellipse 80% 80% at center, transparent 15%, rgba(0,0,0,0.72) 100%);
+    }
+
+    .grain { opacity: 0.42; }
+
+    /* Text trays: anchor to bottom 30% of viewport */
+    .panel { align-items: flex-end; padding-bottom: env(safe-area-inset-bottom, 1.5rem); }
+    .tray { margin-bottom: clamp(1rem, 4vh, 2.5rem); max-width: 100%; }
+    .tray-left, .tray-right { margin-left: 0.75rem; margin-right: 0.75rem; }
   }
 
   .grain {
