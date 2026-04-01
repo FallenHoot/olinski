@@ -14,6 +14,7 @@ const {
   description = 'Olinske by Zach Olinske. Signal Over Hype for enterprise AI, cloud resilience, and CTO operating models.',
 } = Astro.props;
 const currentPath = Astro.url.pathname;
+const showThemeToggle = currentPath !== '/';
 ---
 
 <!doctype html>
@@ -41,13 +42,18 @@ const currentPath = Astro.url.pathname;
           'deep-cloud': 'foundry',
           'high-contrast': 'midnight'
         };
+        var isHome = window.location.pathname === '/';
         var param  = new URLSearchParams(window.location.search).get('theme');
         var saved  = localStorage.getItem('theme') || 'fjord';
         var normalizedParam = param && ALIASES[param] ? ALIASES[param] : param;
         var normalizedSaved = ALIASES[saved] ? ALIASES[saved] : saved;
-        var theme  = VALID.includes(normalizedParam) ? normalizedParam : (VALID.includes(normalizedSaved) ? normalizedSaved : 'fjord');
+        var theme  = isHome
+          ? 'fjord'
+          : (VALID.includes(normalizedParam) ? normalizedParam : (VALID.includes(normalizedSaved) ? normalizedSaved : 'fjord'));
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+        if (!isHome) {
+          localStorage.setItem('theme', theme);
+        }
       })();
     </script>
   </head>
@@ -60,10 +66,10 @@ const currentPath = Astro.url.pathname;
         </a>
         <nav class="site-nav" aria-label="Primary">
           <a class={currentPath === '/' ? 'nav-link is-active' : 'nav-link'} href="/">Home</a>
-          <a class={currentPath.startsWith('/posts') ? 'nav-link is-active' : 'nav-link'} href="/posts/">Articles</a>
           <a class="nav-link" href="/#about">About</a>
+          <a class="nav-link" href="/#lab">Lab</a>
           <button class="nav-link menu-btn" data-menu-btn type="button">Topics</button>
-          <ThemeToggle />
+          {showThemeToggle && <ThemeToggle />}
         </nav>
       </div>
     </header>
