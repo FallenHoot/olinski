@@ -33,10 +33,9 @@ const displayCards = cards.length
     data-voyage={JSON.stringify(voyage)}
   ></canvas>
 
-  <!-- ═══ Mapbox globe canvas (hidden until panel 4) ═════════════ -->
+  <!-- ═══ Cobe globe (hidden until panel 4) ═════════════════════ -->
   <div class="globe-stage" data-globe-stage>
-    <div id="mapbox-globe" data-globe-el></div>
-    <div class="radar-grid" aria-hidden="true"></div>
+    <canvas class="globe-canvas" data-globe-canvas width="1000" height="1000"></canvas>
   </div>
 
   <!-- ═══ Progress rail ══════════════════════════════════════════ -->
@@ -98,11 +97,11 @@ const displayCards = cards.length
     </div>
   </section>
 
-  <!-- ── Panel 4: Mapbox Globe Flyover ───────────────────────── -->
+  <!-- ── Panel 4: Globe Flyover ──────────────────────────────── -->
   <section class="panel story-section globe-panel">
     <div class="story-content">
     <div class="tray tray-left tray-globe">
-      <p class="kicker">THE FLYOVER · SATELLITE VIEW</p>
+      <p class="kicker">THE FLYOVER · GLOBAL VIEW</p>
       <h2>Mapping<br/>The Signal.</h2>
       <p class="copy">45.3° N, 91.8° W → 59.9° N, 10.7° E</p>
     </div>
@@ -136,27 +135,21 @@ const displayCards = cards.length
     pointer-events: none;
   }
 
-  /* ═══ Mapbox globe stage ═══════════════════════════════════════ */
+  /* ═══ Cobe globe stage ══════════════════════════════════════════ */
   .globe-stage {
     position: fixed; inset: 0; z-index: 1;
-      opacity: 0; pointer-events: none;
+    opacity: 0; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    background: #000;
   }
 
   .globe-stage.is-active {
-      pointer-events: auto;
+    pointer-events: auto;
   }
 
-  #mapbox-globe {
-    width: 100%; height: 100%;
-  }
-
-  .radar-grid {
-    position: absolute; inset: 0; pointer-events: none;
-    background-image:
-      radial-gradient(circle, rgba(77,163,255,0.08) 1px, transparent 1px),
-      repeating-conic-gradient(from 0deg, rgba(77,163,255,0.04) 0deg 1deg, transparent 1deg 30deg);
-    background-size: 40px 40px, 100% 100%;
-    opacity: 0.5;
+  .globe-canvas {
+    width: min(90vw, 90vh);
+    height: min(90vw, 90vh);
   }
 
   /* ═══ Panels ══════════════════════════════════════════════════ */
@@ -322,7 +315,7 @@ const displayCards = cards.length
   const root       = document.querySelector<HTMLElement>('[data-story-root]');
   const canvas     = document.querySelector<HTMLCanvasElement>('[data-three-canvas]');
   const globeStage = document.querySelector<HTMLElement>('[data-globe-stage]');
-  const globeEl    = document.querySelector<HTMLElement>('[data-globe-el]');
+  const globeCanvas = document.querySelector<HTMLCanvasElement>('[data-globe-canvas]');
   const coordEl    = document.querySelector<HTMLElement>('[data-coord]');
   const railEl     = document.querySelector<HTMLElement>('[data-rail]');
 
@@ -403,9 +396,19 @@ const displayCards = cards.length
       // ── ④ Single ticker loop ───────────────────────────────────
       const WI   = { lat: 45.36, lng: -91.84 };
       const OSLO = { lat: 59.91, lng: 10.75 };
-      let mapInstance: any = null;
-      let mapReady   = false;
-      let hasFiredFly = false;
+      let globeInstance: any = null;
+      let globeActive = false;
+
+      // Cobe uses phi (longitude rotation) and theta (latitude tilt)
+      // Convert lat/lng to phi/theta for Cobe
+      const lngToPhi = (lng: number) => (-lng * Math.PI) / 180;
+      const latToTheta = (lat: number) => ((90 - lat) * Math.PI) / 180;
+
+      // Animated globe rotation targets
+      let targetPhi   = lngToPhi(WI.lng);
+      let targetTheta = latToTheta(WI.lat);
+      let currentPhi   = targetPhi;
+      let currentTheta = targetTheta;
 
       const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -423,19 +426,27 @@ const displayCards = cards.length
 
         if (globeStage) {
           if (scrollProgress >= 0.72) {
-            globeStage.classList.add('is-active');
-            if (mapReady && !hasFiredFly && mapInstance) {
-              hasFiredFly = true;
-              mapInstance.flyTo({
-                center: [OSLO.lng, OSLO.lat], zoom: 10, pitch: 45,
-                bearing: -17.6, duration: 8000, essential: true,
-              });
+            if (!globeActive) {
+              globeActive = true;
+              globeStage.classList.add('is-active');
             }
+            // Smoothly rotate globe from WI to Oslo
+            const globeProgress = Math.min((scrollProgress - 0.72) / 0.28, 1);
+            targetPhi   = lngToPhi(lerp(WI.lng, OSLO.lng, globeProgress));
+            targetTheta = latToTheta(lerp(WI.lat, OSLO.lat, globeProgress));
           } else {
-            globeStage.classList.remove('is-active');
-            hasFiredFly = false;
+            if (globeActive) {
+              globeActive = false;
+              globeStage.classList.remove('is-active');
+            }
+            targetPhi   = lngToPhi(WI.lng);
+            targetTheta = latToTheta(WI.lat);
           }
         }
+
+        // LERP globe rotation
+        currentPhi   = lerp(currentPhi, targetPhi, 0.08);
+        currentTheta = lerp(currentTheta, targetTheta, 0.08);
 
         // Render Three.js scene
         sc.tick();
@@ -447,31 +458,46 @@ const displayCards = cards.length
       const onResize = () => sc.resize();
       window.addEventListener('resize', onResize);
 
-      // ── ⑤ Mapbox Globe ─────────────────────────────────────────
+      // ── ⑤ Cobe Globe — zero API keys, zero cost ────────────────
       const initGlobe = async () => {
-        if (!globeEl) return;
+        if (!globeCanvas) return;
         try {
-          const mapboxgl = (await import('mapbox-gl')).default;
-          const token = (import.meta as any).env?.PUBLIC_MAPBOX_TOKEN
-            || 'pk.eyJ1Ijoib2xpbnNrZSIsImEiOiJjbHh4eHh4eHgwMDAwMGpxZzh4eHh4eHh4In0.placeholder';
-          mapboxgl.accessToken = token;
-          mapInstance = new mapboxgl.Map({
-            container: globeEl,
-            style: 'mapbox://styles/mapbox/satellite-v9',
-            projection: 'globe' as any,
-            center: [WI.lng, WI.lat],
-            zoom: 4, pitch: 55, bearing: 30,
-            interactive: false,
-          });
-          mapInstance.on('style.load', () => {
-            mapInstance.setFog({
-              range: [0.5, 10], color: '#020818', 'high-color': '#0a1832',
-              'horizon-blend': 0.08, 'space-color': '#000000', 'star-intensity': 0.3,
-            });
-            mapReady = true;
+          const createGlobe = (await import('cobe')).default;
+          globeInstance = createGlobe(globeCanvas, {
+            devicePixelRatio: Math.min(window.devicePixelRatio, 2),
+            width: 1000,
+            height: 1000,
+            phi: currentPhi,
+            theta: currentTheta,
+            dark: 1,
+            diffuse: 1.2,
+            scale: 1,
+            mapSamples: 16000,
+            mapBrightness: 4,
+            baseColor: [0.15, 0.18, 0.25],
+            markerColor: [1, 0.42, 0.21],
+            glowColor: [0.08, 0.14, 0.28],
+            markers: [
+              { location: [WI.lat, WI.lng], size: 0.06 },
+              { location: [OSLO.lat, OSLO.lng], size: 0.06 },
+            ],
+            arcs: [
+              {
+                from: [WI.lat, WI.lng],
+                to: [OSLO.lat, OSLO.lng],
+                color: [1, 0.42, 0.21],
+              },
+            ],
+            arcColor: [1, 0.42, 0.21],
+            arcWidth: 0.6,
+            arcHeight: 0.4,
+            onRender: (state: any) => {
+              state.phi = currentPhi;
+              state.theta = currentTheta;
+            },
           });
         } catch (e) {
-          console.warn('Mapbox GL failed to initialize:', e);
+          console.warn('Cobe globe failed to initialize:', e);
         }
       };
       initGlobe();
@@ -481,7 +507,7 @@ const displayCards = cards.length
         gsap.ticker.remove(tick);
         ScrollTrigger.getAll().forEach((t) => t.kill());
         window.removeEventListener('resize', onResize);
-        if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+        if (globeInstance) { globeInstance.destroy(); globeInstance = null; }
         sc.dispose();
         lenis.destroy();
       };
@@ -490,5 +516,3 @@ const displayCards = cards.length
     });
   }
 </script>
-
-<!-- Mapbox GL CSS loaded in BaseLayout head -->
