@@ -56,22 +56,31 @@ void main() {
   // Cover-fit mapping
   vec2 texUv = coverUV(uv);
 
-  // ── Depth-of-field: blur edges, sharp center ──
-  // Sample offsets for cheap radial blur
-  float dist = length(vUv - 0.5) * 2.0; // 0 at center, 1 at edge
-  float blur = smoothstep(0.3, 0.9, dist) * 0.004; // blur radius ramps at edges
+  // ── Soft-focus: uniform light blur across entire image ──
+  // Masks low-res pixelation by giving everything a painterly quality
+  float blurR = 0.002;
   vec4 tex = texture2D(uTexture, texUv);
-  if (blur > 0.0001) {
-    // 8-tap radial blur for depth-of-field effect
-    tex += texture2D(uTexture, texUv + vec2( blur,  0.0));
-    tex += texture2D(uTexture, texUv + vec2(-blur,  0.0));
-    tex += texture2D(uTexture, texUv + vec2( 0.0,  blur));
-    tex += texture2D(uTexture, texUv + vec2( 0.0, -blur));
-    tex += texture2D(uTexture, texUv + vec2( blur,  blur) * 0.707);
-    tex += texture2D(uTexture, texUv + vec2(-blur,  blur) * 0.707);
-    tex += texture2D(uTexture, texUv + vec2( blur, -blur) * 0.707);
-    tex += texture2D(uTexture, texUv + vec2(-blur, -blur) * 0.707);
-    tex /= 9.0;
+  tex += texture2D(uTexture, texUv + vec2( blurR,  0.0));
+  tex += texture2D(uTexture, texUv + vec2(-blurR,  0.0));
+  tex += texture2D(uTexture, texUv + vec2( 0.0,  blurR));
+  tex += texture2D(uTexture, texUv + vec2( 0.0, -blurR));
+  tex += texture2D(uTexture, texUv + vec2( blurR,  blurR) * 0.707);
+  tex += texture2D(uTexture, texUv + vec2(-blurR,  blurR) * 0.707);
+  tex += texture2D(uTexture, texUv + vec2( blurR, -blurR) * 0.707);
+  tex += texture2D(uTexture, texUv + vec2(-blurR, -blurR) * 0.707);
+  tex /= 9.0;
+
+  // Extra edge blur on top for depth
+  float dist = length(vUv - 0.5) * 2.0;
+  float edgeBlur = smoothstep(0.4, 1.0, dist) * 0.003;
+  if (edgeBlur > 0.0001) {
+    vec4 edgeTex = vec4(0.0);
+    edgeTex += texture2D(uTexture, texUv + vec2( edgeBlur,  0.0));
+    edgeTex += texture2D(uTexture, texUv + vec2(-edgeBlur,  0.0));
+    edgeTex += texture2D(uTexture, texUv + vec2( 0.0,  edgeBlur));
+    edgeTex += texture2D(uTexture, texUv + vec2( 0.0, -edgeBlur));
+    edgeTex /= 4.0;
+    tex = mix(tex, edgeTex, smoothstep(0.4, 1.0, dist));
   }
 
   // ── Heavy vignette — cinematic letterbox feel ──
