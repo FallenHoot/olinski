@@ -56,32 +56,7 @@ void main() {
   // Cover-fit mapping
   vec2 texUv = coverUV(uv);
 
-  // ── Soft-focus: uniform light blur across entire image ──
-  // Masks low-res pixelation by giving everything a painterly quality
-  float blurR = 0.002;
   vec4 tex = texture2D(uTexture, texUv);
-  tex += texture2D(uTexture, texUv + vec2( blurR,  0.0));
-  tex += texture2D(uTexture, texUv + vec2(-blurR,  0.0));
-  tex += texture2D(uTexture, texUv + vec2( 0.0,  blurR));
-  tex += texture2D(uTexture, texUv + vec2( 0.0, -blurR));
-  tex += texture2D(uTexture, texUv + vec2( blurR,  blurR) * 0.707);
-  tex += texture2D(uTexture, texUv + vec2(-blurR,  blurR) * 0.707);
-  tex += texture2D(uTexture, texUv + vec2( blurR, -blurR) * 0.707);
-  tex += texture2D(uTexture, texUv + vec2(-blurR, -blurR) * 0.707);
-  tex /= 9.0;
-
-  // Extra edge blur on top for depth
-  float dist = length(vUv - 0.5) * 2.0;
-  float edgeBlur = smoothstep(0.4, 1.0, dist) * 0.003;
-  if (edgeBlur > 0.0001) {
-    vec4 edgeTex = vec4(0.0);
-    edgeTex += texture2D(uTexture, texUv + vec2( edgeBlur,  0.0));
-    edgeTex += texture2D(uTexture, texUv + vec2(-edgeBlur,  0.0));
-    edgeTex += texture2D(uTexture, texUv + vec2( 0.0,  edgeBlur));
-    edgeTex += texture2D(uTexture, texUv + vec2( 0.0, -edgeBlur));
-    edgeTex /= 4.0;
-    tex = mix(tex, edgeTex, smoothstep(0.4, 1.0, dist));
-  }
 
   // ── Heavy vignette — cinematic letterbox feel ──
   vec2 center = vUv - 0.5;
