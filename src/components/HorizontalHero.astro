@@ -529,6 +529,11 @@ const displayCards = cards.length
         currentPhi   = lerp(currentPhi, targetPhi, 0.08);
         currentTheta = lerp(currentTheta, targetTheta, 0.08);
 
+        // Update Cobe globe rotation
+        if (globeInstance) {
+          globeInstance.update({ phi: currentPhi, theta: currentTheta });
+        }
+
         // Render Three.js scene
         sc.tick();
       };
@@ -550,14 +555,15 @@ const displayCards = cards.length
             height: 1000,
             phi: currentPhi,
             theta: currentTheta,
-            dark: 1,
-            diffuse: 3,
+            dark: 0,
+            diffuse: 1.2,
             scale: 1,
-            mapSamples: 40000,
-            mapBrightness: 12,
-            baseColor: [0.4, 0.45, 0.55],
+            mapSamples: 16000,
+            mapBrightness: 6,
+            mapBaseBrightness: 0.05,
+            baseColor: [0.3, 0.3, 0.3],
             markerColor: [1, 0.42, 0.21],
-            glowColor: [0.15, 0.2, 0.35],
+            glowColor: [0.15, 0.15, 0.2],
             markers: [
               { location: [45.36, -91.34], size: 0.06 },  // Cadott, WI
               { location: [51.24,   0.51], size: 0.04 },  // Kent, England
@@ -566,18 +572,14 @@ const displayCards = cards.length
               { location: [59.91,  10.75], size: 0.06 },  // Oslo
             ],
             arcs: [
-              { from: [51.24, 0.51], to: [41.82, -71.41], color: [0.6, 0.7, 1.0] },   // Kent → RI
-              { from: [41.82, -71.41], to: [45.36, -91.34], color: [0.6, 0.7, 1.0] },  // RI → WI
-              { from: [53.75, 18.93], to: [45.36, -91.34], color: [1.0, 0.6, 0.3] },   // Prussia → WI
-              { from: [45.36, -91.34], to: [59.91, 10.75], color: [1, 0.42, 0.21] },   // WI → Oslo
+              { from: [51.24, 0.51], to: [41.82, -71.41], color: [0.6, 0.7, 1.0] },
+              { from: [41.82, -71.41], to: [45.36, -91.34], color: [0.6, 0.7, 1.0] },
+              { from: [53.75, 18.93], to: [45.36, -91.34], color: [1.0, 0.6, 0.3] },
+              { from: [45.36, -91.34], to: [59.91, 10.75], color: [1, 0.42, 0.21] },
             ],
             arcColor: [1, 0.42, 0.21],
-            arcWidth: 0.6,
-            arcHeight: 0.4,
-            onRender: (state: any) => {
-              state.phi = currentPhi;
-              state.theta = currentTheta;
-            },
+            arcWidth: 0.5,
+            arcHeight: 0.3,
           });
         } catch (e) {
           console.warn('Cobe globe failed to initialize:', e);
