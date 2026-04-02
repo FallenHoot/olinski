@@ -35,8 +35,11 @@ const displayCards = cards.length
 
   <!-- ═══ Cobe globe (hidden until panel 4) ═════════════════════ -->
   <div class="globe-stage" data-globe-stage>
-    <canvas class="globe-canvas" data-globe-canvas width="1000" height="1000"></canvas>
-  </div>
+    <canvas class="globe-canvas" data-globe-canvas width="1000" height="1000"></canvas>    <div class="globe-label" data-marker="wi">Wisconsin · 1989</div>
+    <div class="globe-label" data-marker="kent">Kent · 1500s</div>
+    <div class="globe-label" data-marker="ri">Rhode Island · 1700s</div>
+    <div class="globe-label" data-marker="prussia">Prussia · 1800s</div>
+    <div class="globe-label" data-marker="oslo">Oslo · 2024</div>  </div>
 
   <!-- ═══ Progress rail ══════════════════════════════════════════ -->
   <div class="rail" aria-hidden="true"><div class="rail-fill" data-rail></div></div>
@@ -192,6 +195,67 @@ const displayCards = cards.length
   .globe-canvas {
     width: min(90vw, 90vh);
     height: min(90vw, 90vh);
+  }
+
+  .globe-label {
+    position: absolute;
+    padding: 0.25rem 0.6rem;
+    background: rgba(6, 14, 28, 0.85);
+    border: 1px solid rgba(200, 220, 255, 0.2);
+    border-radius: 4px;
+    color: #d0e2ff;
+    font-family: var(--font-mono, Consolas, monospace);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.3s, filter 0.3s;
+  }
+
+  .globe-label[data-marker="wi"] {
+    position-anchor: --cobe-wi;
+    bottom: anchor(top);
+    left: anchor(center);
+    translate: -50% 0;
+    margin-bottom: 6px;
+    opacity: var(--cobe-visible-wi, 0);
+    filter: blur(calc((1 - var(--cobe-visible-wi, 0)) * 6px));
+  }
+  .globe-label[data-marker="kent"] {
+    position-anchor: --cobe-kent;
+    bottom: anchor(top);
+    left: anchor(center);
+    translate: -50% 0;
+    margin-bottom: 6px;
+    opacity: var(--cobe-visible-kent, 0);
+    filter: blur(calc((1 - var(--cobe-visible-kent, 0)) * 6px));
+  }
+  .globe-label[data-marker="ri"] {
+    position-anchor: --cobe-ri;
+    bottom: anchor(top);
+    left: anchor(center);
+    translate: -50% 0;
+    margin-bottom: 6px;
+    opacity: var(--cobe-visible-ri, 0);
+    filter: blur(calc((1 - var(--cobe-visible-ri, 0)) * 6px));
+  }
+  .globe-label[data-marker="prussia"] {
+    position-anchor: --cobe-prussia;
+    bottom: anchor(top);
+    left: anchor(center);
+    translate: -50% 0;
+    margin-bottom: 6px;
+    opacity: var(--cobe-visible-prussia, 0);
+    filter: blur(calc((1 - var(--cobe-visible-prussia, 0)) * 6px));
+  }
+  .globe-label[data-marker="oslo"] {
+    position-anchor: --cobe-oslo;
+    bottom: anchor(top);
+    left: anchor(center);
+    translate: -50% 0;
+    margin-bottom: 6px;
+    opacity: var(--cobe-visible-oslo, 0);
+    filter: blur(calc((1 - var(--cobe-visible-oslo, 0)) * 6px));
   }
 
   /* ═══ Panels ══════════════════════════════════════════════════ */
@@ -565,11 +629,11 @@ const displayCards = cards.length
             markerColor: [1, 0.42, 0.21],
             glowColor: [0.15, 0.15, 0.2],
             markers: [
-              { location: [45.36, -91.34], size: 0.06 },  // Cadott, WI
-              { location: [51.24,   0.51], size: 0.04 },  // Kent, England
-              { location: [41.82, -71.41], size: 0.04 },  // Rhode Island
-              { location: [53.75,  18.93], size: 0.04 },  // Marienwerder
-              { location: [59.91,  10.75], size: 0.06 },  // Oslo
+              { location: [45.36, -91.34], size: 0.06, id: 'wi' },
+              { location: [51.24,   0.51], size: 0.04, id: 'kent' },
+              { location: [41.82, -71.41], size: 0.04, id: 'ri' },
+              { location: [53.75,  18.93], size: 0.04, id: 'prussia' },
+              { location: [59.91,  10.75], size: 0.06, id: 'oslo' },
             ],
             arcs: [
               { from: [51.24, 0.51], to: [41.82, -71.41], color: [0.6, 0.7, 1.0] },
