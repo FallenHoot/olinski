@@ -567,24 +567,24 @@ const displayCards = cards.length
       let globeInstance: any = null;
       let globeActive = false;
 
-      // Cobe coordinate system:
-      // phi=0 faces Americas (~90°W), increasing phi rotates east
-      // theta>0 tilts to show northern hemisphere
-      // Pre-computed phi/theta for each stop (no conversion errors)
+      // Cobe: phi=0 → Prime Meridian faces camera
+      // phi = -longitude * PI/180 (mod 2PI) centers that longitude
+      // theta ≈ 0.2–0.4 for northern hemisphere tilt
+      const PI = Math.PI;
       const GLOBE_STOPS = [
-        { phi: 1.58, theta: 0.30 },  // Kent, England (0.5°E)
-        { phi: 0.33, theta: 0.25 },  // Rhode Island (-71°W)
-        { phi: -0.02, theta: 0.28 }, // Wisconsin (-91°W)
-        { phi: 1.90, theta: 0.35 },  // Prussia (19°E)
-        { phi: 1.76, theta: 0.38 },  // Oslo (10.7°E)
+        { phi: 0.00,  theta: 0.30 },  // Kent (0.5°E ≈ prime meridian)
+        { phi: 1.25,  theta: 0.25 },  // Rhode Island (71°W)
+        { phi: 1.59,  theta: 0.28 },  // Wisconsin (91°W)
+        { phi: -0.33, theta: 0.32 },  // Prussia (19°E → -0.33, wraps to 5.95 but use negative for short path from WI)
+        { phi: -0.19, theta: 0.35 },  // Oslo (10.7°E → -0.19)
       ];
 
+      // Use Kent as starting phi but unwrapped for smooth LERP
       let targetPhi   = GLOBE_STOPS[0].phi;
       let targetTheta = GLOBE_STOPS[0].theta;
       let currentPhi   = targetPhi;
       let currentTheta = targetTheta;
 
-      // Track which arcs to show (progressively revealed)
       let currentLeg = 0;
 
       const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
