@@ -119,6 +119,17 @@ export interface ImageEntry {
   path: string;
 }
 
+export interface GlobeArc {
+  from: [number, number]; // [lat, lng]
+  to: [number, number];
+  color: number;
+}
+
+export interface GlobeMarker {
+  location: [number, number]; // [lat, lng]
+  label: string;
+}
+
 // ── SceneController ────────────────────────────────────────────
 export class SceneController {
   private renderer: THREE.WebGLRenderer;
@@ -131,7 +142,17 @@ export class SceneController {
   private clock = new THREE.Clock();
   private reducedMotion: boolean;
 
+  // Globe
+  private globeGroup: THREE.Group | null = null;
+  private globeMesh: THREE.Mesh | null = null;
+  private arcMeshes: THREE.Line[] = [];
+  private markerMeshes: THREE.Mesh[] = [];
+  private globeMarkers: GlobeMarker[] = [];
+  private ambientLight: THREE.AmbientLight | null = null;
+  private dirLight: THREE.DirectionalLight | null = null;
+
   private readonly CAM_Z = 5;
+  private readonly GLOBE_RADIUS = 1.6;
 
   constructor(canvas: HTMLCanvasElement) {
     this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -205,6 +226,114 @@ export class SceneController {
     return this.mats.get(key)!.uniforms.uGrid;
   }
 
+  // ── Globe ────────────────────────────────────────────────────
+
+  /** Initialize the globe with earth texture, arcs, and markers */
+  initGlobe(
+    texturePath: string,
+    arcs: GlobeArc[],
+    markers: GlobeMarker[],
+  ): Promise<void> {
+    return new Promise((resolve) => {
+      this.globeMarkers = markers;
+      this.globeGroup = new THREE.Group();
+      this.globeGroup.visible = false;
+      this.scene.add(this.globeGroup);
+
+      // Lighting for the globe
+      this.ambientLight = new THREE.AmbientLight(0x404060, 1.5);
+      this.globeGroup.add(this.ambientLight);
+      this.dirLight = new THREE.DirectionalLight(0xffffff, 2);
+      this.dirLight.position.set(5, 3, 5);
+      this.globeGroup.add(this.dirLight);
+
+      // Earth sphere
+      const geo = new THREE.SphereGeometry(this.GLOBE_RADIUS, 64, 64);
+      const loader = new THREE.TextureLoader();
+      loader.load(texturePath, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const mat = new THREE.MeshStandardMaterial({
+          map: tex,
+          roughness: 1,
+          metalness: 0,
+        });
+        this.globeMesh = new THREE.Mesh(geo, mat);
+        this.globeGroup!.add(this.globeMesh);
+
+        // Atmosphere glow (slightly larger translucent sphere)
+        const atmosGeo = new THREE.SphereGeometry(this.GLOBE_RADIUS * 1.02, 32, 32);
+        const atmosMat = new THREE.MeshBasicMaterial({
+          color: 0x4488ff,
+          transparent: true,
+          opacity: 0.06,
+          side: THREE.BackSide,
+        });
+        this.globeGroup!.add(new THREE.Mesh(atmosGeo, atmosMat));
+
+        // Build arcs
+        arcs.forEach((arc) => {
+          const line = this.createArc(arc.from, arc.to, arc.color);
+          line.visible = false;
+          this.arcMeshes.push(line);
+          this.globeGroup!.add(line);
+        });
+
+        // Build markers
+        markers.forEach((m) => {
+          const dot = this.createMarker(m.location);
+          this.markerMeshes.push(dot);
+          this.globeGroup!.add(dot);
+        });
+
+        resolve();
+      });
+    });
+  }
+
+  /** Show/hide the globe */
+  setGlobeVisible(visible: boolean): void {
+    if (this.globeGroup) this.globeGroup.visible = visible;
+  }
+
+  /** Set globe rotation to face a lat/lng (standard coordinates) */
+  setGlobeRotation(lat: number, lng: number): void {
+    if (!this.globeMesh) return;
+    // Three.js: Y-rotation = longitude, X-rotation = latitude
+    // Offset longitude by +90° so lng=0 faces the camera
+    this.globeMesh.rotation.y = -lng * (Math.PI / 180) + Math.PI / 2;
+    this.globeMesh.rotation.x = lat * (Math.PI / 180) * 0.3; // subtle tilt
+  }
+
+  /** Show arcs up to index (0-based, inclusive) */
+  showArcsUpTo(index: number): void {
+    this.arcMeshes.forEach((arc, i) => {
+      arc.visible = i <= index;
+    });
+  }
+
+  /** Get marker screen positions for label overlay */
+  getMarkerScreenPositions(): Array<{ x: number; y: number; behind: boolean; label: string }> {
+    if (!this.globeMesh) return [];
+    return this.globeMarkers.map((m, i) => {
+      const mesh = this.markerMeshes[i];
+      if (!mesh) return { x: 0, y: 0, behind: true, label: m.label };
+
+      const pos = new THREE.Vector3();
+      mesh.getWorldPosition(pos);
+      pos.project(this.camera);
+
+      const x = (pos.x + 1) / 2 * window.innerWidth;
+      const y = (-pos.y + 1) / 2 * window.innerHeight;
+
+      // Check if marker is facing camera (dot product with camera direction)
+      const camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+      const markerDir = pos.clone().sub(this.camera.position).normalize();
+      const facing = camDir.dot(markerDir);
+
+      return { x, y, behind: facing < 0.2 || pos.z > 1, label: m.label };
+    });
+  }
+
   /** Per-frame render. Called from gsap.ticker. */
   tick(): void {
     const t = this.clock.getElapsedTime();
@@ -265,6 +394,21 @@ export class SceneController {
       this.particleMat.dispose();
     }
 
+    // Globe cleanup
+    if (this.globeMesh) {
+      this.globeMesh.geometry.dispose();
+      (this.globeMesh.material as THREE.MeshStandardMaterial).map?.dispose();
+      (this.globeMesh.material as THREE.MeshStandardMaterial).dispose();
+    }
+    this.arcMeshes.forEach((arc) => {
+      arc.geometry.dispose();
+      (arc.material as THREE.LineBasicMaterial).dispose();
+    });
+    this.markerMeshes.forEach((m) => {
+      m.geometry.dispose();
+      (m.material as THREE.MeshBasicMaterial).dispose();
+    });
+
     this.renderer.dispose();
   }
 
@@ -312,6 +456,45 @@ export class SceneController {
     const h = 2 * this.CAM_Z * Math.tan(vFov / 2);
     const w = h * this.camera.aspect;
     return [w * 1.05, h * 1.05];
+  }
+
+  /** Convert lat/lng to 3D point on globe surface */
+  private latLngToVec3(lat: number, lng: number, radius?: number): THREE.Vector3 {
+    const r = radius || this.GLOBE_RADIUS;
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lng + 180) * (Math.PI / 180);
+    return new THREE.Vector3(
+      -r * Math.sin(phi) * Math.cos(theta),
+      r * Math.cos(phi),
+      r * Math.sin(phi) * Math.sin(theta),
+    );
+  }
+
+  /** Create a great-circle arc between two lat/lng points */
+  private createArc(from: [number, number], to: [number, number], color: number): THREE.Line {
+    const points: THREE.Vector3[] = [];
+    const segments = 64;
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;
+      const lat = from[0] + (to[0] - from[0]) * t;
+      const lng = from[1] + (to[1] - from[1]) * t;
+      // Lift the arc above the surface — parabolic arc height
+      const lift = 1 + Math.sin(t * Math.PI) * 0.15;
+      points.push(this.latLngToVec3(lat, lng, this.GLOBE_RADIUS * lift));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({ color, linewidth: 2, transparent: true, opacity: 0.9 });
+    return new THREE.Line(geo, mat);
+  }
+
+  /** Create a marker dot at a lat/lng */
+  private createMarker(location: [number, number]): THREE.Mesh {
+    const pos = this.latLngToVec3(location[0], location[1], this.GLOBE_RADIUS * 1.01);
+    const geo = new THREE.SphereGeometry(0.025, 12, 12);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff6b35 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(pos);
+    return mesh;
   }
 
   private initParticles(): void {
