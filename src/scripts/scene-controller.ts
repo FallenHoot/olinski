@@ -309,10 +309,10 @@ export class SceneController {
   /** Set globe rotation to face a lat/lng (standard coordinates) */
   setGlobeRotation(lat: number, lng: number): void {
     if (!this.globeGroup) return;
-    // Three.js SphereGeometry: at rotation.y=0, lng≈-90°W faces camera
-    // To center on longitude L: rotation.y = (L + 90) * PI/180
-    this.globeGroup.rotation.y = (lng + 90) * (Math.PI / 180);
-    // Tilt to show the latitude (subtle, just enough to shift the view)
+    // Three.js SphereGeometry: at rotation.y=0, camera sees lng=-90° (Pacific)
+    // To center on longitude L: rotation.y = -(L + 90) * PI/180
+    this.globeGroup.rotation.y = -(lng + 90) * (Math.PI / 180);
+    // Tilt to show the latitude
     this.globeGroup.rotation.x = -lat * (Math.PI / 180) * 0.35;
   }
 
