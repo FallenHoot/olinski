@@ -567,16 +567,15 @@ const displayCards = cards.length
       let globeInstance: any = null;
       let globeActive = false;
 
-      // Cobe: phi=0 → Prime Meridian faces camera
-      // phi = -longitude * PI/180 (mod 2PI) centers that longitude
-      // theta ≈ 0.2–0.4 for northern hemisphere tilt
-      const PI = Math.PI;
+      // Cobe internals: marker([lat,lng]) → 3D via a = lng*PI/180 - PI
+      // To center longitude X: phi = PI - X*PI/180
+      // theta ≈ 0.2–0.4 for northern hemisphere (higher = more tilt toward north pole)
       const GLOBE_STOPS = [
-        { phi: 0.00,  theta: 0.30 },  // Kent (0.5°E ≈ prime meridian)
-        { phi: 1.25,  theta: 0.25 },  // Rhode Island (71°W)
-        { phi: 1.59,  theta: 0.28 },  // Wisconsin (91°W)
-        { phi: -0.33, theta: 0.32 },  // Prussia (19°E → -0.33, wraps to 5.95 but use negative for short path from WI)
-        { phi: -0.19, theta: 0.35 },  // Oslo (10.7°E → -0.19)
+        { phi: 3.13, theta: 0.30 },  // Kent (0.5°E) — PI
+        { phi: 4.39, theta: 0.25 },  // Rhode Island (-71°W)
+        { phi: 4.74, theta: 0.28 },  // Wisconsin (-91°W)
+        { phi: 2.81, theta: 0.32 },  // Prussia (19°E)
+        { phi: 2.95, theta: 0.35 },  // Oslo (10.7°E)
       ];
 
       // Use Kent as starting phi but unwrapped for smooth LERP
