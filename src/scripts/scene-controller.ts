@@ -56,6 +56,9 @@ void main() {
   // Cover-fit mapping
   vec2 texUv = coverUV(uv);
 
+  // Clamp to valid range — prevents edge pixel streaking
+  texUv = clamp(texUv, 0.001, 0.999);
+
   vec4 tex = texture2D(uTexture, texUv);
 
   // ── Heavy vignette — cinematic letterbox feel ──
@@ -214,8 +217,8 @@ export class SceneController {
 
     // Camera drift — subtle parallax against particles
     if (!this.reducedMotion) {
-      this.camera.position.x = Math.sin(t * 0.13) * 0.12;
-      this.camera.position.y = Math.cos(t * 0.11) * 0.08;
+      this.camera.position.x = Math.sin(t * 0.13) * 0.04;
+      this.camera.position.y = Math.cos(t * 0.11) * 0.03;
       this.camera.lookAt(0, 0, 0);
     }
 
@@ -308,7 +311,7 @@ export class SceneController {
     const vFov = this.camera.fov * (Math.PI / 180);
     const h = 2 * this.CAM_Z * Math.tan(vFov / 2);
     const w = h * this.camera.aspect;
-    return [w * 1.25, h * 1.25];
+    return [w * 1.05, h * 1.05];
   }
 
   private initParticles(): void {
