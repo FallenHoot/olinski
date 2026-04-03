@@ -567,21 +567,20 @@ const displayCards = cards.length
       let globeInstance: any = null;
       let globeActive = false;
 
-      const lngToPhi = (lng: number) => (-lng * Math.PI) / 180;
-      const latToTheta = (lat: number) => ((90 - lat) * Math.PI) / 180;
-
-      // Globe journey legs (chronological order)
-      const GLOBE_LEGS = [
-        { lat: 51.24, lng:   0.51 },   // Start: Kent, England
-        { lat: 41.82, lng: -71.41 },   // Leg 1: → Rhode Island
-        { lat: 45.36, lng: -91.34 },   // Leg 2: → Wisconsin
-        { lat: 53.75, lng:  18.93 },   // Leg 3: ← Prussia (converge to WI shown via arc)
-        { lat: 59.91, lng:  10.75 },   // Leg 4: → Oslo
+      // Cobe coordinate system:
+      // phi=0 faces Americas (~90°W), increasing phi rotates east
+      // theta>0 tilts to show northern hemisphere
+      // Pre-computed phi/theta for each stop (no conversion errors)
+      const GLOBE_STOPS = [
+        { phi: 1.58, theta: 0.30 },  // Kent, England (0.5°E)
+        { phi: 0.33, theta: 0.25 },  // Rhode Island (-71°W)
+        { phi: -0.02, theta: 0.28 }, // Wisconsin (-91°W)
+        { phi: 1.90, theta: 0.35 },  // Prussia (19°E)
+        { phi: 1.76, theta: 0.38 },  // Oslo (10.7°E)
       ];
 
-      // Start at Kent
-      let targetPhi   = lngToPhi(GLOBE_LEGS[0].lng);
-      let targetTheta = latToTheta(GLOBE_LEGS[0].lat);
+      let targetPhi   = GLOBE_STOPS[0].phi;
+      let targetTheta = GLOBE_STOPS[0].theta;
       let currentPhi   = targetPhi;
       let currentTheta = targetTheta;
 
@@ -625,13 +624,11 @@ const displayCards = cards.length
             const legT = (globeLocalProgress * 4) - legIndex;
             currentLeg = legIndex;
 
-            // Fly camera between leg waypoints
-            const fromPt = GLOBE_LEGS[legIndex];
-            const toPt = GLOBE_LEGS[legIndex + 1];
-            const flyLat = lerp(fromPt.lat, toPt.lat, legT);
-            const flyLng = lerp(fromPt.lng, toPt.lng, legT);
-            targetPhi = lngToPhi(flyLng);
-            targetTheta = latToTheta(flyLat);
+            // Fly camera between stops
+            const fromStop = GLOBE_STOPS[legIndex];
+            const toStop = GLOBE_STOPS[legIndex + 1];
+            targetPhi = lerp(fromStop.phi, toStop.phi, legT);
+            targetTheta = lerp(fromStop.theta, toStop.theta, legT);
 
             // Update arcs progressively
             if (globeInstance) {
