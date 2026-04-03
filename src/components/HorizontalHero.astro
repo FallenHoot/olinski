@@ -144,13 +144,43 @@ const displayCards = cards.length
     </div>
   </section>
 
-  <!-- ── 8. Globe Flyover ────────────────────────────────────── -->
+  <!-- ── 8–11. Globe Journey (scroll-driven flyover) ──────────── -->
   <section class="panel story-section globe-panel">
     <div class="story-content">
     <div class="tray tray-left tray-globe">
-      <p class="kicker">NETWORK MAP · 1500s → 2024</p>
-      <h2>Tracing<br/>The Route.</h2>
-      <p class="copy">Kent → Rhode Island → Wisconsin → Oslo. Five centuries of uptime across two continents.</p>
+      <p class="kicker">LEG 1 · KENT → RHODE ISLAND · 1620s</p>
+      <h2>The Atlantic<br/>Crossing.</h2>
+      <p class="copy">The Clerkes leave England. A one-way migration across the North Atlantic to the Rhode Island colony.</p>
+    </div>
+    </div>
+  </section>
+
+  <section class="panel story-section globe-panel">
+    <div class="story-content">
+    <div class="tray tray-right tray-globe">
+      <p class="kicker">LEG 2 · RHODE ISLAND → WISCONSIN · 1800s</p>
+      <h2>Westward<br/>Expansion.</h2>
+      <p class="copy">The Clark branch pushes inland. From the coast of New England to the forests and farmland of the upper Midwest.</p>
+    </div>
+    </div>
+  </section>
+
+  <section class="panel story-section globe-panel">
+    <div class="story-content">
+    <div class="tray tray-left tray-globe">
+      <p class="kicker">LEG 3 · PRUSSIA → WISCONSIN · 1890s</p>
+      <h2>The Oliński<br/>Transfer.</h2>
+      <p class="copy">The other bloodline converges. From the Vistula River to Barron County — the Prussian-Polish branch meets the Kentish-American line in Wisconsin soil.</p>
+    </div>
+    </div>
+  </section>
+
+  <section class="panel story-section globe-panel">
+    <div class="story-content">
+    <div class="tray tray-right tray-globe">
+      <p class="kicker">LEG 4 · WISCONSIN → OSLO · 2014</p>
+      <h2>Return to<br/>Europe.</h2>
+      <p class="copy">Five centuries after leaving Kent, the line returns to Northern Europe. Full circle. High uptime.</p>
     </div>
     </div>
   </section>
@@ -460,7 +490,7 @@ const displayCards = cards.length
         scrollTrigger: {
           trigger: root,
           start: 'top top',
-          end: '+=800%',
+          end: '+=1100%',
           scrub: 1,
           pin: true,
           anticipatePin: 1,
@@ -498,7 +528,7 @@ const displayCards = cards.length
       tl.to(sc.grid('oslo'), { value: 0.4, duration: 0.5 }, osloStart + 0.4);
       tl.to(sc.opacity('oslo'), { value: 0, duration: 0.3 }, osloStart + panelDur - 0.2);
 
-      // ── Chapter VIII: Globe (t = 7 → 8) ───────────────────────
+      // ── Chapter VIII–XI: Globe journey (t = 7 → 11) ──────────
       const globeStart = panelDur * 7;
       tl.to(canvas, { opacity: 0, duration: 0.3 }, globeStart);
       if (globeStage) tl.to(globeStage, { opacity: 1, duration: 0.4 }, globeStart + 0.1);
@@ -540,11 +570,23 @@ const displayCards = cards.length
       const lngToPhi = (lng: number) => (-lng * Math.PI) / 180;
       const latToTheta = (lat: number) => ((90 - lat) * Math.PI) / 180;
 
-      // Start globe centered on mid-Atlantic so all arcs are visible
-      let targetPhi   = lngToPhi(-30);
-      let targetTheta = latToTheta(48);
+      // Globe journey legs (chronological order)
+      const GLOBE_LEGS = [
+        { lat: 51.24, lng:   0.51 },   // Start: Kent, England
+        { lat: 41.82, lng: -71.41 },   // Leg 1: → Rhode Island
+        { lat: 45.36, lng: -91.34 },   // Leg 2: → Wisconsin
+        { lat: 53.75, lng:  18.93 },   // Leg 3: ← Prussia (converge to WI shown via arc)
+        { lat: 59.91, lng:  10.75 },   // Leg 4: → Oslo
+      ];
+
+      // Start at Kent
+      let targetPhi   = lngToPhi(GLOBE_LEGS[0].lng);
+      let targetTheta = latToTheta(GLOBE_LEGS[0].lat);
       let currentPhi   = targetPhi;
       let currentTheta = targetTheta;
+
+      // Track which arcs to show (progressively revealed)
+      let currentLeg = 0;
 
       const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -567,20 +609,46 @@ const displayCards = cards.length
             `${Math.abs(lat).toFixed(1)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lng).toFixed(1)}° ${lng >= 0 ? 'E' : 'W'}`;
         }
 
+        // Globe panels span from 7/11 to 11/11 of total progress
+        const globeThreshold = 7 / 11;
         if (globeStage) {
-          if (scrollProgress >= 0.875) {
+          if (scrollProgress >= globeThreshold) {
             if (!globeActive) {
               globeActive = true;
               globeStage.classList.add('is-active');
             }
-            // Slow rotation: start on Atlantic, sweep east toward Oslo
-            const globeProgress = Math.min((scrollProgress - 0.875) / 0.125, 1);
-            // Start at -30° (mid-Atlantic, arcs visible) → rotate to +10° (Oslo)
-            const startLng = -30;
-            const endLng = 10;
-            targetPhi = lngToPhi(lerp(startLng, endLng, globeProgress));
-            // Slight tilt from 48° (mid-latitude overview) → 55° (Oslo)
-            targetTheta = latToTheta(lerp(48, 55, globeProgress));
+
+            // 4 globe panels: each gets 1/11 of total progress
+            const globeLocalProgress = (scrollProgress - globeThreshold) / (1 - globeThreshold);
+            // Which leg are we on? (0–3)
+            const legIndex = Math.min(Math.floor(globeLocalProgress * 4), 3);
+            const legT = (globeLocalProgress * 4) - legIndex;
+            currentLeg = legIndex;
+
+            // Fly camera between leg waypoints
+            const fromPt = GLOBE_LEGS[legIndex];
+            const toPt = GLOBE_LEGS[legIndex + 1];
+            const flyLat = lerp(fromPt.lat, toPt.lat, legT);
+            const flyLng = lerp(fromPt.lng, toPt.lng, legT);
+            targetPhi = lngToPhi(flyLng);
+            targetTheta = latToTheta(flyLat);
+
+            // Update arcs progressively
+            if (globeInstance) {
+              const allArcs = [
+                { from: [51.24, 0.51], to: [41.82, -71.41], color: [0.6, 0.7, 1.0] as [number,number,number] },
+                { from: [41.82, -71.41], to: [45.36, -91.34], color: [0.6, 0.7, 1.0] as [number,number,number] },
+                { from: [53.75, 18.93], to: [45.36, -91.34], color: [1.0, 0.6, 0.3] as [number,number,number] },
+                { from: [45.36, -91.34], to: [59.91, 10.75], color: [1, 0.42, 0.21] as [number,number,number] },
+              ];
+              // Show arcs up to and including current leg
+              const visibleArcs = allArcs.slice(0, legIndex + 1);
+              globeInstance.update({
+                phi: currentPhi,
+                theta: currentTheta,
+                arcs: visibleArcs,
+              });
+            }
           } else {
             if (globeActive) {
               globeActive = false;
@@ -592,11 +660,6 @@ const displayCards = cards.length
         // LERP globe rotation
         currentPhi   = lerp(currentPhi, targetPhi, 0.08);
         currentTheta = lerp(currentTheta, targetTheta, 0.08);
-
-        // Update Cobe globe rotation
-        if (globeInstance) {
-          globeInstance.update({ phi: currentPhi, theta: currentTheta });
-        }
 
         // Render Three.js scene
         sc.tick();
@@ -629,18 +692,13 @@ const displayCards = cards.length
             markerColor: [1, 0.42, 0.21],
             glowColor: [0.15, 0.15, 0.2],
             markers: [
+              { location: [51.24,   0.51], size: 0.05, id: 'kent' },
+              { location: [41.82, -71.41], size: 0.05, id: 'ri' },
               { location: [45.36, -91.34], size: 0.06, id: 'wi' },
-              { location: [51.24,   0.51], size: 0.04, id: 'kent' },
-              { location: [41.82, -71.41], size: 0.04, id: 'ri' },
-              { location: [53.75,  18.93], size: 0.04, id: 'prussia' },
+              { location: [53.75,  18.93], size: 0.05, id: 'prussia' },
               { location: [59.91,  10.75], size: 0.06, id: 'oslo' },
             ],
-            arcs: [
-              { from: [51.24, 0.51], to: [41.82, -71.41], color: [0.6, 0.7, 1.0] },
-              { from: [41.82, -71.41], to: [45.36, -91.34], color: [0.6, 0.7, 1.0] },
-              { from: [53.75, 18.93], to: [45.36, -91.34], color: [1.0, 0.6, 0.3] },
-              { from: [45.36, -91.34], to: [59.91, 10.75], color: [1, 0.42, 0.21] },
-            ],
+            arcs: [],
             arcColor: [1, 0.42, 0.21],
             arcWidth: 0.5,
             arcHeight: 0.3,
