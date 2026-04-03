@@ -520,12 +520,17 @@ const displayCards = cards.length
           targetLat = lerp(fromPt.lat, toPt.lat, legT);
           targetLng = lerp(fromPt.lng, toPt.lng, legT);
 
+          // Zoom: start zoomed out (0.85), zoom in slightly during each leg
+          const zoomLevel = lerp(0.85, 0.7, legT * 0.3 + legIndex * 0.05);
+          sc.setGlobeZoom(zoomLevel);
+
           // Progressive arcs
           sc.showArcsUpTo(legIndex);
         } else {
           if (globeActive) {
             globeActive = false;
             sc.setGlobeVisible(false);
+            sc.setGlobeZoom(1.0);
             if (globeLabelsEl) globeLabelsEl.classList.remove('is-active');
           }
         }

@@ -61,19 +61,23 @@ void main() {
 
   vec4 tex = texture2D(uTexture, texUv);
 
-  // ── Heavy vignette — cinematic letterbox feel ──
+  // ── Soft vignette — cinematic edge darkening without killing center ──
   vec2 center = vUv - 0.5;
-  float vig = 1.0 - dot(center, center) * 2.4;
-  vig = smoothstep(-0.1, 0.8, vig);
+  float vig = 1.0 - dot(center, center) * 1.6;
+  vig = smoothstep(-0.05, 0.9, vig);
 
   // ── Subtle film grain ──
-  float grain = hash(vUv * 1000.0 + fract(uTime * 0.1)) * 0.04 - 0.02;
+  float grain = hash(vUv * 1000.0 + fract(uTime * 0.1)) * 0.035 - 0.0175;
 
-  // ── Color grading: warm shadows, desaturate, darken ──
+  // ── Color grading: warm shadows, slight desaturate, moderate darken ──
   float luma = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
-  vec3 graded = mix(vec3(luma), tex.rgb, 0.72);
-  graded *= vec3(1.06, 0.98, 0.90); // warm tint
-  graded *= 0.50; // darken for text contrast
+  vec3 graded = mix(vec3(luma), tex.rgb, 0.78);
+  graded *= vec3(1.04, 0.98, 0.92); // warm tint
+  graded *= 0.72; // moderate darken for text contrast
+
+  // ── Bottom fog gradient — atmospheric depth ──
+  float fog = smoothstep(0.0, 0.35, vUv.y);
+  graded = mix(graded * 0.4, graded, fog);
 
   // ── Procedural grid overlay (Oslo section) ──
   if (uGrid > 0.01) {
@@ -94,10 +98,11 @@ attribute float aSize;
 uniform float uTime;
 void main() {
   vec3 pos = position;
-  pos.y += sin(uTime * 0.3 + position.x * 10.0) * 0.05;
-  pos.x += cos(uTime * 0.2 + position.z * 8.0) * 0.03;
+  pos.y += sin(uTime * 0.15 + position.x * 4.0) * 0.12;
+  pos.x += cos(uTime * 0.1 + position.z * 3.0) * 0.08;
+  pos.y += sin(uTime * 0.05 + position.x * 0.5) * 0.2;
   vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-  gl_PointSize = aSize * (80.0 / -mvPos.z);
+  gl_PointSize = aSize * (100.0 / -mvPos.z);
   gl_Position = projectionMatrix * mvPos;
 }
 `;
@@ -108,8 +113,8 @@ uniform float uOpacity;
 void main() {
   float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;
-  float alpha = smoothstep(0.5, 0.2, d) * uOpacity;
-  gl_FragColor = vec4(0.82, 0.89, 1.0, alpha);
+  float alpha = smoothstep(0.5, 0.1, d) * uOpacity;
+  gl_FragColor = vec4(0.85, 0.9, 1.0, alpha * 0.6);
 }
 `;
 
@@ -141,6 +146,7 @@ export class SceneController {
   private particleMat!: THREE.ShaderMaterial;
   private clock = new THREE.Clock();
   private reducedMotion: boolean;
+  private _scrollOffset = 0;
 
   // Globe
   private globeGroup: THREE.Group | null = null;
@@ -226,6 +232,11 @@ export class SceneController {
     return this.mats.get(key)!.uniforms.uGrid;
   }
 
+  /** Set scroll progress for parallax camera offset */
+  setScrollOffset(progress: number): void {
+    this._scrollOffset = progress;
+  }
+
   // ── Globe ────────────────────────────────────────────────────
 
   /** Initialize the globe with earth texture, arcs, and markers */
@@ -297,11 +308,19 @@ export class SceneController {
 
   /** Set globe rotation to face a lat/lng (standard coordinates) */
   setGlobeRotation(lat: number, lng: number): void {
-    if (!this.globeMesh) return;
-    // Three.js: Y-rotation = longitude, X-rotation = latitude
-    // Offset longitude by +90° so lng=0 faces the camera
-    this.globeMesh.rotation.y = -lng * (Math.PI / 180) + Math.PI / 2;
-    this.globeMesh.rotation.x = lat * (Math.PI / 180) * 0.3; // subtle tilt
+    if (!this.globeGroup) return;
+    // Three.js SphereGeometry: at rotation.y=0, lng≈-90°W faces camera
+    // To center on longitude L: rotation.y = (L + 90) * PI/180
+    this.globeGroup.rotation.y = (lng + 90) * (Math.PI / 180);
+    // Tilt to show the latitude (subtle, just enough to shift the view)
+    this.globeGroup.rotation.x = -lat * (Math.PI / 180) * 0.35;
+  }
+
+  /** Set camera zoom for globe (distance from center) */
+  setGlobeZoom(zoom: number): void {
+    // zoom: 1.0 = normal, 0.5 = close, 2.0 = far
+    this.camera.position.z = this.CAM_Z * zoom;
+    this.camera.lookAt(0, 0, 0);
   }
 
   /** Show arcs up to index (0-based, inclusive) */
@@ -344,11 +363,11 @@ export class SceneController {
       mat.uniforms.uTime.value = timeVal;
     });
 
-    // Camera drift — subtle parallax against particles
+    // Camera drift — subtle parallax + scroll-linked depth offset
     if (!this.reducedMotion) {
-      this.camera.position.x = Math.sin(t * 0.13) * 0.04;
-      this.camera.position.y = Math.cos(t * 0.11) * 0.03;
-      this.camera.lookAt(0, 0, 0);
+      this.camera.position.x = Math.sin(t * 0.13) * 0.06;
+      this.camera.position.y = Math.cos(t * 0.11) * 0.04 + this._scrollOffset * -0.15;
+      this.camera.lookAt(0, this._scrollOffset * -0.08, 0);
     }
 
     // Particle time
@@ -498,15 +517,16 @@ export class SceneController {
   }
 
   private initParticles(): void {
-    const count = 120;
+    const count = 400;
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 16;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      positions[i * 3 + 2] = Math.random() * (this.CAM_Z - 0.5) + 0.2;
-      sizes[i] = Math.random() * 1.2 + 0.3;
+      positions[i * 3] = (Math.random() - 0.5) * 20;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 14;
+      positions[i * 3 + 2] = Math.random() * (this.CAM_Z - 0.3) + 0.1;
+      // Mix of fine dust and larger cloud-like particles
+      sizes[i] = i < 300 ? Math.random() * 1.5 + 0.3 : Math.random() * 4.0 + 2.0;
     }
 
     const geo = new THREE.BufferGeometry();
@@ -516,7 +536,7 @@ export class SceneController {
     this.particleMat = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
-        uOpacity: { value: 0.08 },
+        uOpacity: { value: 0.18 },
       },
       vertexShader: PARTICLE_VERT,
       fragmentShader: PARTICLE_FRAG,
