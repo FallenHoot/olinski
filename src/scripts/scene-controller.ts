@@ -312,8 +312,8 @@ export class SceneController {
     // Three.js SphereGeometry: at rotation.y=0, camera sees lng=-90° (Pacific)
     // To center on longitude L: rotation.y = -(L + 90) * PI/180
     this.globeGroup.rotation.y = -(lng + 90) * (Math.PI / 180);
-    // Tilt to show the latitude
-    this.globeGroup.rotation.x = -lat * (Math.PI / 180) * 0.35;
+    // Tilt to show the latitude — negative rotates north into view
+    this.globeGroup.rotation.x = lat * (Math.PI / 180) * 0.5;
   }
 
   /** Set camera zoom for globe (distance from center) */
