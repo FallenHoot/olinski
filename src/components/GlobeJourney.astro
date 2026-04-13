@@ -1,0 +1,279 @@
+---
+// GlobeJourney — standalone scroll-driven globe section
+// Renders below the hero as its own pinned scroll area
+---
+
+<section class="globe-journey" data-globe-root>
+  <canvas class="globe-canvas" data-globe-canvas></canvas>
+
+  <div class="globe-labels" data-globe-labels>
+    <div class="globe-label">Kent · 1600s</div>
+    <div class="globe-label">Rhode Island · 1700s</div>
+    <div class="globe-label">Wisconsin · 1989</div>
+    <div class="globe-label">Prussia · 1800s</div>
+    <div class="globe-label">Oslo · 2024</div>
+  </div>
+
+  <div class="globe-coord" aria-live="polite">
+    <span class="gc-label">ROUTE</span>
+    <span class="gc-value" data-globe-coord>Kent → Oslo</span>
+  </div>
+</section>
+
+<style>
+  .globe-journey {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    background: #000;
+  }
+
+  .globe-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .globe-labels {
+    position: fixed; inset: 0; z-index: 3;
+    pointer-events: none;
+    display: none;
+  }
+  .globe-labels.is-active { display: block; }
+
+  .globe-label {
+    position: absolute;
+    padding: 0.2rem 0.5rem;
+    background: rgba(6, 14, 28, 0.8);
+    border: 1px solid rgba(200, 220, 255, 0.18);
+    border-radius: 4px;
+    color: #d0e2ff;
+    font-family: var(--font-mono, Consolas, monospace);
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    transform: translate(-50%, -100%);
+    margin-top: -8px;
+  }
+
+  .globe-coord {
+    position: fixed; right: clamp(0.8rem,2vw,1.6rem); bottom: clamp(0.8rem,2vw,1.4rem);
+    z-index: 60; display: flex; gap: 0.5rem; align-items: baseline;
+    padding: 0.35rem 0.65rem; border-radius: 10px;
+    border: 1px solid rgba(200,220,255,0.12);
+    background: rgba(6,14,28,0.72);
+    backdrop-filter: blur(10px);
+    color: #d0e2ff; font-family: var(--font-mono, Consolas, monospace);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .globe-coord.is-active { opacity: 1; }
+  .gc-label { font-size: 0.62rem; letter-spacing: 0.14em; opacity: 0.65; }
+  .gc-value { font-size: 0.82rem; font-weight: 600; }
+</style>
+
+<script>
+  import * as THREE from 'three';
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const root = document.querySelector<HTMLElement>('[data-globe-root]');
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-globe-canvas]');
+  const labelsEl = document.querySelector<HTMLElement>('[data-globe-labels]');
+  const labelEls = Array.from(document.querySelectorAll<HTMLElement>('.globe-label'));
+  const coordEl = document.querySelector<HTMLElement>('[data-globe-coord]');
+  const coordBadge = document.querySelector<HTMLElement>('.globe-coord');
+
+  if (root && canvas) {
+    // ── Three.js setup ──────────────────────────────────────────
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 1);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 4);
+    camera.lookAt(0, 0, 0);
+
+    const GLOBE_R = 1.6;
+    const group = new THREE.Group();
+    scene.add(group);
+
+    // Lighting
+    group.add(new THREE.AmbientLight(0x404060, 1.5));
+    const dir = new THREE.DirectionalLight(0xffffff, 2);
+    dir.position.set(5, 3, 5);
+    group.add(dir);
+
+    // Earth sphere
+    const loader = new THREE.TextureLoader();
+    loader.load('/images/earth-2k.jpg', (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 });
+      group.add(new THREE.Mesh(new THREE.SphereGeometry(GLOBE_R, 64, 64), mat));
+
+      // Atmosphere
+      const atmosMat = new THREE.MeshBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.06, side: THREE.BackSide });
+      group.add(new THREE.Mesh(new THREE.SphereGeometry(GLOBE_R * 1.02, 32, 32), atmosMat));
+    });
+
+    // ── Journey data ────────────────────────────────────────────
+    const STOPS = [
+      { lat: 51.24, lng:   0.51, label: 'Kent' },
+      { lat: 41.82, lng: -71.41, label: 'Rhode Island' },
+      { lat: 53.75, lng:  18.93, label: 'Prussia' },
+      { lat: 45.36, lng: -91.34, label: 'Wisconsin' },
+      { lat: 59.91, lng:  10.75, label: 'Oslo' },
+    ];
+
+    const ARCS = [
+      { from: STOPS[0], to: STOPS[1], color: 0x99aaff },
+      { from: STOPS[1], to: STOPS[2], color: 0x99aaff },
+      { from: STOPS[2], to: STOPS[3], color: 0xff994d },
+      { from: STOPS[3], to: STOPS[4], color: 0xff6b35 },
+    ];
+
+    // Helper: lat/lng to 3D
+    function toVec3(lat: number, lng: number, r: number): THREE.Vector3 {
+      const phi = (90 - lat) * Math.PI / 180;
+      const theta = (lng + 180) * Math.PI / 180;
+      return new THREE.Vector3(-r * Math.sin(phi) * Math.cos(theta), r * Math.cos(phi), r * Math.sin(phi) * Math.sin(theta));
+    }
+
+    // Markers
+    STOPS.forEach(s => {
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.025, 12, 12), new THREE.MeshBasicMaterial({ color: 0xff6b35 }));
+      dot.position.copy(toVec3(s.lat, s.lng, GLOBE_R * 1.01));
+      group.add(dot);
+    });
+
+    // Arcs
+    const arcMeshes: THREE.Line[] = [];
+    ARCS.forEach(arc => {
+      const pts: THREE.Vector3[] = [];
+      for (let i = 0; i <= 64; i++) {
+        const t = i / 64;
+        const lat = arc.from.lat + (arc.to.lat - arc.from.lat) * t;
+        const lng = arc.from.lng + (arc.to.lng - arc.from.lng) * t;
+        const lift = 1 + Math.sin(t * Math.PI) * 0.15;
+        pts.push(toVec3(lat, lng, GLOBE_R * lift));
+      }
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      const mat = new THREE.LineBasicMaterial({ color: arc.color, transparent: true, opacity: 0.9 });
+      const line = new THREE.Line(geo, mat);
+      line.visible = false;
+      arcMeshes.push(line);
+      group.add(line);
+    });
+
+    // ── Scroll-driven rotation ──────────────────────────────────
+    let scrollProgress = 0;
+    let currentLat = STOPS[0].lat;
+    let currentLng = STOPS[0].lng;
+
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: root,
+        start: 'top top',
+        end: '+=400%',
+        scrub: 1,
+        pin: true,
+        anticipatePin: 1,
+        onUpdate: (self) => { scrollProgress = self.progress; },
+        onEnter: () => {
+          if (labelsEl) labelsEl.classList.add('is-active');
+          if (coordBadge) coordBadge.classList.add('is-active');
+        },
+        onLeaveBack: () => {
+          if (labelsEl) labelsEl.classList.remove('is-active');
+          if (coordBadge) coordBadge.classList.remove('is-active');
+        },
+      },
+    });
+
+    // Tick
+    const tick = () => {
+      // 4 legs over 100% of scroll
+      const legIndex = Math.min(Math.floor(scrollProgress * 4), 3);
+      const legT = (scrollProgress * 4) - legIndex;
+
+      const from = STOPS[legIndex];
+      const to = STOPS[legIndex + 1];
+      const targetLat = lerp(from.lat, to.lat, legT);
+      const targetLng = lerp(from.lng, to.lng, legT);
+
+      currentLat = lerp(currentLat, targetLat, 0.08);
+      currentLng = lerp(currentLng, targetLng, 0.08);
+
+      // Rotate globe
+      group.rotation.y = -(currentLng + 90) * Math.PI / 180;
+      group.rotation.x = currentLat * Math.PI / 180 * 0.5;
+
+      // Show arcs progressively
+      arcMeshes.forEach((arc, i) => { arc.visible = i <= legIndex; });
+
+      // Zoom
+      camera.position.z = lerp(4, 3.2, scrollProgress * 0.5);
+      camera.lookAt(0, 0, 0);
+
+      // Route label
+      if (coordEl) {
+        const legs = ['Kent → Rhode Island', 'Rhode Island → Prussia', 'Prussia → Wisconsin', 'Wisconsin → Oslo'];
+        coordEl.textContent = legs[legIndex] || legs[3];
+      }
+
+      // Marker label positions
+      if (labelsEl) {
+        STOPS.forEach((s, i) => {
+          const pos3d = toVec3(s.lat, s.lng, GLOBE_R * 1.01);
+          // Apply group rotation
+          const rotated = pos3d.clone();
+          rotated.applyEuler(group.rotation);
+          rotated.project(camera);
+
+          const x = (rotated.x + 1) / 2 * window.innerWidth;
+          const y = (-rotated.y + 1) / 2 * window.innerHeight;
+          const behind = rotated.z > 0.99;
+
+          if (labelEls[i]) {
+            labelEls[i].style.left = `${x}px`;
+            labelEls[i].style.top = `${y}px`;
+            labelEls[i].style.opacity = behind ? '0' : '1';
+          }
+        });
+      }
+
+      renderer.render(scene, camera);
+    };
+
+    gsap.ticker.add(tick);
+
+    // Resize
+    const onResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+    window.addEventListener('resize', onResize);
+
+    // Cleanup
+    const cleanup = () => {
+      gsap.ticker.remove(tick);
+      ScrollTrigger.getAll().forEach(t => t.kill());
+      window.removeEventListener('resize', onResize);
+      renderer.dispose();
+    };
+    document.addEventListener('astro:before-swap', cleanup, { once: true });
+    window.addEventListener('pagehide', cleanup, { once: true });
+  }
+</script>

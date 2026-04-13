@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HorizontalHero from '../components/HorizontalHero.astro';
+import GlobeJourney from '../components/GlobeJourney.astro';
 import { getCollection } from 'astro:content';
 
 // ── The three anchors ──────────────────────────────────────────────
@@ -37,4 +38,5 @@ const posts = (
     voyage={voyage}
     cards={posts}
   />
+  <GlobeJourney />
 </BaseLayout>
