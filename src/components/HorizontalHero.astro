@@ -385,6 +385,9 @@ const displayCards = cards.length
         },
       });
 
+      // Signal to GlobeJourney that our pin spacer is ready
+      document.dispatchEvent(new CustomEvent('hero:ready'));
+
       // ── Timeline — 7 panels with overlapping cross-dissolves ───
       // Each panel gets 1.0 unit. Fade-out starts at 55%, fade-in at 50%.
       // This creates a 45% overlap zone where both images blend.

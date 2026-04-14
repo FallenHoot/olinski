@@ -11,19 +11,78 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 ---
 
 <BaseLayout title={`${post.data.title} | Olinske`} description={post.data.description}>
   <main class="container site-shell">
-    <article class="panel article fade-in">
-      <p class="eyebrow">
-        {post.data.publishDate.toISOString().slice(0, 10)}
-      </p>
-      <h1>{post.data.title}</h1>
+    <section class="hero-panel fade-in">
+      <p class="eyebrow">{post.data.publishDate.toISOString().slice(0, 10)}</p>
+      <h1 class="hero-title">{post.data.title}</h1>
       <p class="hero-subtitle">{post.data.description}</p>
-      <hr style="border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0;" />
-      <Content />
-    </article>
+      <div class="tag-row">
+        {(post.data.tags ?? []).map((tag) => (
+          <span class="tag-chip">{tag}</span>
+        ))}
+      </div>
+    </section>
+
+    <section class="article-shell fade-in fade-delay-1">
+      <aside class="toc-panel">
+        <h2>On this page</h2>
+        {
+          toc.length === 0 ? (
+            <p class="post-meta">No sections found.</p>
+          ) : (
+            <ul class="toc-list" id="toc-list">
+              {toc.map((heading) => (
+                <li class={heading.depth === 3 ? 'toc-item toc-sub' : 'toc-item'}>
+                  <a href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+
+        <aside class="infra-ledger" aria-label="Infrastructure Ledger">
+          <p><strong>SOURCE:</strong> Wisconsin</p>
+          <p><strong>TARGET:</strong> Oslo</p>
+          <p><strong>STACK:</strong> Azure/Microsoft</p>
+          <p><strong>STATUS:</strong> Building</p>
+        </aside>
+      </aside>
+
+      <article class="article-panel">
+        <aside class="callout callout-note">
+          <strong>Technical note</strong>
+          <p>Prefer skimming first: scan headings and jump to the section most relevant to your current architecture decision.</p>
+        </aside>
+        <Content />
+      </article>
+    </section>
   </main>
+
+  <script>
+    const headingNodes = Array.from(document.querySelectorAll('.article-panel h2[id], .article-panel h3[id]'));
+    const tocAnchors = Array.from(document.querySelectorAll('.toc-list a'));
+    const anchorMap = new Map(tocAnchors.map((anchor) => [anchor.getAttribute('href')?.slice(1), anchor]));
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (!visible.length) return;
+
+        const activeId = visible[0].target.getAttribute('id');
+        tocAnchors.forEach((anchor) => anchor.classList.remove('is-active'));
+        const activeAnchor = activeId ? anchorMap.get(activeId) : null;
+        if (activeAnchor) activeAnchor.classList.add('is-active');
+      },
+      { rootMargin: '-35% 0px -55% 0px', threshold: [0, 1] }
+    );
+
+    headingNodes.forEach((heading) => observer.observe(heading));
+  </script>
 </BaseLayout>

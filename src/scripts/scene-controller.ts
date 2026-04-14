@@ -46,7 +46,7 @@ vec2 coverUV(vec2 uv) {
   } else {
     s = vec2(uViewportAspect / uImageAspect, 1.0);
   }
-  return (uv - 0.5) / s + 0.5;
+  return (uv - 0.5) * s + 0.5;
 }
 
 void main() {

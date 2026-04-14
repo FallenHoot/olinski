@@ -1,9 +1,9 @@
 name: Deploy to Azure Web App
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -11,13 +11,21 @@ jobs:
     permissions:
       id-token: write
       contents: read
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - run: npm install
-      - run: npm run build
+          node-version: 20
+
+      - name: Install deps
+        run: npm install
+
+      - name: Build site
+        run: npm run build
 
       - name: Azure login
         uses: azure/login@v2

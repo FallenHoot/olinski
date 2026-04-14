@@ -14,6 +14,7 @@
     "check:content:publish": "node scripts/validate-content.mjs --gate=publish",
     "check:agent-artifacts": "node scripts/validate-agent-artifacts.mjs",
     "export:public": "node scripts/export-public-repo.mjs",
+    "linkedin:post": "node scripts/post-to-linkedin.mjs",
     "ci:draft": "npm run check && npm run check:content && npm run build",
     "ci:review": "npm run ci:draft && npm run check:content:review",
     "ci:publish": "npm run ci:review && npm run check:content:publish && npm run check:agent-artifacts"
