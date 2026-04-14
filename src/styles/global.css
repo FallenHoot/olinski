@@ -618,29 +618,8 @@ a:focus-visible {
   grid-column: span 1;
 }
 
-.infra-ledger {
-  margin-top: 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 0.7rem 0.8rem;
-  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
-}
-
-.infra-ledger p {
-  margin: 0 0 0.35rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--muted);
-  letter-spacing: 0.02em;
-}
-
-.infra-ledger p:last-child {
-  margin-bottom: 0;
-}
-
 body.theme-wave-active .story-panel,
 body.theme-wave-active .post-card,
-body.theme-wave-active .infra-ledger,
 body.theme-wave-active .monolith-frame,
 body.theme-wave-active .blueprint-card {
   animation: theme-wave 460ms ease;
