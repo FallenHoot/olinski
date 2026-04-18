@@ -288,15 +288,23 @@ const displayCards = cards.length
     .story-section {
       height: 100svh;
     }
+    .tray-left, .tray-right {
+      margin-left: 0.75rem;
+      margin-right: 0.75rem;
+    }
   }
 
   @media (max-width: 480px) {
-    .tray { padding: 1rem; border-radius: 16px; }
-    .panel h2 { font-size: clamp(1.6rem, 12vw, 2.4rem); }
+    .tray { padding: 0.8rem; border-radius: 12px; }
+    .panel h2 { font-size: clamp(1.5rem, 12vw, 2.2rem); }
+    .copy { font-size: 0.88rem; line-height: 1.6; }
     .cards { gap: 0.5rem; }
     .card { padding: 0.7rem; }
-    .card h3 { font-size: 0.9rem; }
+    .card h3 { font-size: 0.85rem; }
+    .card-desc { font-size: 0.82rem; }
+    .card-ledger p { font-size: 0.58rem; }
     .rail { width: 2px; }
+    .coord-badge { display: none; }
   }
 
   /* Large / ultrawide screens */
@@ -355,6 +363,18 @@ const displayCards = cards.length
     const farmPath    = canvas.dataset.farm!;
     const osloPath    = canvas.dataset.oslo!;
     const voyagePaths: string[] = JSON.parse(canvas.dataset.voyage || '[]');
+    const fogEl       = document.querySelector<HTMLElement>('.fog-overlay');
+    const railRoot    = document.querySelector<HTMLElement>('.rail');
+    const coordBadge  = document.querySelector<HTMLElement>('.coord-badge');
+
+    // Show/hide all fixed hero elements when entering/leaving the pinned section
+    const showHeroFixed = (visible: boolean) => {
+      const v = visible ? 'visible' : 'hidden';
+      canvas.style.visibility = v;
+      if (fogEl) fogEl.style.visibility = v;
+      if (railRoot) railRoot.style.visibility = v;
+      if (coordBadge) coordBadge.style.visibility = v;
+    };
 
     const images = [
       { key: 'farm', path: farmPath },
@@ -382,6 +402,10 @@ const displayCards = cards.length
           pin: true,
           anticipatePin: 1,
           onUpdate: (self) => { scrollProgress = self.progress; },
+          onEnter: () => showHeroFixed(true),
+          onEnterBack: () => showHeroFixed(true),
+          onLeave: () => showHeroFixed(false),
+          onLeaveBack: () => showHeroFixed(false),
         },
       });
 

@@ -56,6 +56,7 @@
   .globe-journey {
     position: relative;
     width: 100%;
+    height: 100vh;
     background: #000;
   }
 
@@ -141,9 +142,17 @@
   }
 
   @media (max-width: 980px) {
-    .globe-canvas { left: 50%; }
+    .globe-canvas { left: 50%; width: min(90vw, 80vh); height: min(90vw, 80vh); }
     .tray-left, .tray-right { margin-left: 1rem; margin-right: 1rem; max-width: 100%; }
     .globe-panel h2 { font-size: clamp(2rem, 10vw, 4rem); }
+  }
+
+  @media (max-width: 480px) {
+    .globe-canvas { width: min(95vw, 70vh); height: min(95vw, 70vh); }
+    .tray-globe { margin-top: clamp(2rem, 8vh, 4rem); }
+    .globe-panel h2 { font-size: clamp(1.6rem, 12vw, 2.4rem); }
+    .copy { font-size: 0.92rem; }
+    .kicker { font-size: 0.6rem; }
   }
 </style>
 

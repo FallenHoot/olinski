@@ -59,11 +59,14 @@ a:hover {
 }
 
 .nav-shell {
+  width: min(1140px, 100%);
+  margin: 0 auto;
+  padding-inline: clamp(0.75rem, 4vw, 2rem);
   height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .brand {
@@ -96,6 +99,7 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  flex-shrink: 0;
 }
 
 .nav-link {
@@ -169,8 +173,10 @@ a:focus-visible {
 }
 
 .hero-title {
-  font-size: clamp(2.35rem, 7vw, 5.2rem);
-  max-width: 14ch;
+  font-size: clamp(1.75rem, 7vw, 5.2rem);
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .hero-subtitle {
@@ -230,6 +236,7 @@ a:focus-visible {
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   box-shadow: var(--shadow);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  min-width: 0;
 }
 
 .post-card:hover {
@@ -299,7 +306,7 @@ a:focus-visible {
 .article-shell {
   margin-top: 1rem;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: 240px minmax(0, 1fr);
   gap: 1rem;
 }
 
@@ -375,6 +382,8 @@ a:focus-visible {
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface-2) 90%, transparent);
   padding: 0.8rem;
+  max-width: 100%;
+  word-break: break-all;
 }
 
 .callout {
@@ -444,7 +453,7 @@ a:focus-visible {
   height: 100vh;
   padding: clamp(1.4rem, 4vw, 3.2rem);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.95fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
   gap: clamp(1rem, 2.6vw, 2rem);
   align-items: center;
   background:
@@ -681,17 +690,91 @@ body.theme-wave-active .blueprint-card {
 }
 
 @media (max-width: 700px) {
+  .container {
+    width: 96vw;
+  }
+
   .site-nav {
-    gap: 0.35rem;
+    gap: 0.25rem;
   }
 
   .nav-link {
-    font-size: 0.84rem;
-    padding: 0.3rem 0.45rem;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.35rem;
+  }
+
+  .brand-word {
+    font-size: 0.85rem;
   }
 
   .hero-title {
-    font-size: clamp(1.95rem, 9vw, 3rem);
+    font-size: clamp(1.65rem, 9vw, 3rem);
+  }
+
+  .post-thumb {
+    height: 120px;
+  }
+
+  .feed-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .post-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 420px) {
+  .container {
+    width: 98vw;
+  }
+
+  .nav-shell {
+    height: 56px;
+    padding-inline: 0.6rem;
+  }
+
+  .brand-word {
+    display: none;
+  }
+
+  .site-nav {
+    gap: 0.15rem;
+  }
+
+  .nav-link {
+    font-size: 0.76rem;
+    padding: 0.2rem 0.3rem;
+  }
+
+  .hero-panel {
+    padding: clamp(1rem, 4vw, 1.5rem);
+    border-radius: 16px;
+  }
+
+  .hero-title {
+    font-size: clamp(1.4rem, 8vw, 2.2rem);
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .article-panel {
+    padding: 0.9rem;
+    border-radius: 12px;
+  }
+
+  .article-panel h2 {
+    font-size: 1.25rem;
+  }
+
+  .about-panel {
+    padding: 0.8rem;
+  }
+
+  .v-card-thumb {
+    height: 100px;
   }
 }
 
@@ -1182,6 +1265,30 @@ html.theme-wave .theme-toggle {
   }
   .mono-headline {
     font-size: clamp(3rem, 13vw, 5rem);
+  }
+  .monolith-wrap {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .mono-headline {
+    font-size: clamp(2.2rem, 14vw, 3.2rem);
+  }
+  .mono-sub {
+    font-size: 0.9rem;
+  }
+  .philosophy-headline {
+    font-size: clamp(1.8rem, 10vw, 3rem);
+  }
+  .panel-hint {
+    display: none;
+  }
+  .intel-card {
+    padding: 1rem;
+  }
+  .frost-layer {
+    padding: clamp(1rem, 4vw, 2rem);
   }
 }
 
