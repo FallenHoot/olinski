@@ -436,8 +436,9 @@ export class SceneController {
   private addPlane(key: string, texture: THREE.Texture, index: number): void {
     const geo = new THREE.PlaneGeometry(1, 1);
 
-    const imageAspect = texture.image
-      ? (texture.image.width || 1) / (texture.image.height || 1)
+    const img = texture.image as HTMLImageElement | undefined;
+    const imageAspect = img
+      ? (img.width || 1) / (img.height || 1)
       : 1;
 
     const mat = new THREE.ShaderMaterial({
