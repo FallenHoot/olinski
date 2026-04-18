@@ -196,7 +196,7 @@ export class SceneController {
       images.forEach((img, i) => {
         loader.load(
           img.path,
-          (texture) => {
+          (texture: THREE.Texture) => {
             texture.minFilter = THREE.LinearFilter;
             texture.magFilter = THREE.LinearFilter;
             texture.colorSpace = THREE.SRGBColorSpace;
@@ -261,7 +261,7 @@ export class SceneController {
       // Earth sphere
       const geo = new THREE.SphereGeometry(this.GLOBE_RADIUS, 64, 64);
       const loader = new THREE.TextureLoader();
-      loader.load(texturePath, (tex) => {
+      loader.load(texturePath, (tex: THREE.Texture) => {
         tex.colorSpace = THREE.SRGBColorSpace;
         const mat = new THREE.MeshStandardMaterial({
           map: tex,
