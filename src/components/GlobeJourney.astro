@@ -167,15 +167,22 @@
   const globePanels = Array.from(document.querySelectorAll<HTMLElement>('[data-globe-panel]'));
 
   if (root && globeCanvas) {
-    // Cobe globe stops (phi/theta for camera orientation)
-    // phi = longitude rotation in radians: -lng*(PI/180) + PI
-    // theta = latitude tilt in radians: lat*(PI/180)
+    // Cobe globe camera stops.
+    // In Cobe: phi=0 faces the Prime Meridian (Europe/Africa).
+    //   phi = longitude_degrees * (PI/180)   (negative for west)
+    //   theta = latitude_degrees * (PI/180)
+    //
+    // Stop order matches the 4-panel narrative:
+    //   Leg 0 (stops 0→1): Kent → Rhode Island  (westward across Atlantic)
+    //   Leg 1 (stops 1→2): RI → Prussia         (eastward transition to second bloodline)
+    //   Leg 2 (stops 2→3): Prussia → Wisconsin   (westward, matches panel text)
+    //   Leg 3 (stops 3→4): Wisconsin → Oslo       (eastward return to Europe)
     const GLOBE_STOPS = [
-      { phi: 3.133, theta: 0.894 },  // Kent, England (51.24°N, 0.51°E)
-      { phi: 4.388, theta: 0.730 },  // Rhode Island (41.82°N, 71.41°W)
-      { phi: 4.735, theta: 0.792 },  // Wisconsin (45.36°N, 91.34°W)
-      { phi: 2.811, theta: 0.938 },  // Prussia (53.75°N, 18.93°E)
-      { phi: 2.954, theta: 1.046 },  // Oslo (59.91°N, 10.75°E)
+      { phi:  0.009, theta: 0.894 },  // Kent, England (51.24°N, 0.51°E)
+      { phi: -1.246, theta: 0.730 },  // Rhode Island (41.82°N, 71.41°W)
+      { phi:  0.330, theta: 0.938 },  // Prussia (53.75°N, 18.93°E)
+      { phi: -1.594, theta: 0.792 },  // Wisconsin (45.36°N, 91.34°W)
+      { phi:  0.187, theta: 1.046 },  // Oslo (59.91°N, 10.75°E)
     ];
 
     let scrollProgress = 0;
@@ -267,13 +274,13 @@
       currentPhi = lerp(currentPhi, targetPhi, 0.08);
       currentTheta = lerp(currentTheta, targetTheta, 0.08);
 
-      // Update arcs progressively
+      // Update arcs progressively (match stop order)
       if (globeInstance) {
         const allArcs = [
-          { from: [51.24, 0.51], to: [41.82, -71.41], color: [0.6, 0.7, 1.0] as [number,number,number] },
-          { from: [41.82, -71.41], to: [45.36, -91.34], color: [0.6, 0.7, 1.0] as [number,number,number] },
-          { from: [53.75, 18.93], to: [45.36, -91.34], color: [1.0, 0.6, 0.3] as [number,number,number] },
-          { from: [45.36, -91.34], to: [59.91, 10.75], color: [1, 0.42, 0.21] as [number,number,number] },
+          { from: [51.24, 0.51], to: [41.82, -71.41], color: [0.6, 0.7, 1.0] as [number,number,number] },    // Leg 0: Kent → RI
+          { from: [41.82, -71.41], to: [53.75, 18.93], color: [0.6, 0.7, 1.0] as [number,number,number] },   // Leg 1: RI → Prussia
+          { from: [53.75, 18.93], to: [45.36, -91.34], color: [1.0, 0.6, 0.3] as [number,number,number] },   // Leg 2: Prussia → WI
+          { from: [45.36, -91.34], to: [59.91, 10.75], color: [1, 0.42, 0.21] as [number,number,number] },   // Leg 3: WI → Oslo
         ];
         globeInstance.update({
           phi: currentPhi,
