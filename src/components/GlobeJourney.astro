@@ -216,15 +216,21 @@
       return tl;
     };
 
-    // Defer init until the hero's ScrollTrigger pin is ready
+    // Defer init until the hero's ScrollTrigger pin spacer is ready.
+    // The hero dispatches 'hero:ready' after its textures load and
+    // its ScrollTrigger (with pin) is created. We MUST wait for that
+    // because the pin spacer adds ~700vh of scroll space. If we create
+    // our ScrollTrigger before that, our trigger position is wrong
+    // and the globe overlaps the hero section.
     const heroReady = new Promise<void>((resolve) => {
       document.addEventListener('hero:ready', () => resolve(), { once: true });
-      // Fallback: if hero event never fires, init after a refresh cycle
-      ScrollTrigger.addEventListener('refresh', () => resolve());
     });
 
     let tl: gsap.core.Timeline;
     heroReady.then(() => {
+      // Force a refresh so ScrollTrigger recalculates all positions
+      // now that the hero's pin spacer is in the DOM.
+      ScrollTrigger.refresh();
       tl = initGlobeScrollTrigger();
 
       // Panel fade in/out — 4 panels over 4 units
