@@ -1,22 +1,11 @@
 name: Promote to Blog and Post to LinkedIn
 
-# Triggers when:
-# 1. A post is added/updated in content/posts/ — fully automated
-# 2. publish-queue.json is updated
-# 3. Cron: Wed+Sat at noon CET (scheduled publish)
-# 4. Manual dispatch
-#
-# Only promotes posts that exist in content/posts/ but NOT in content/published/.
-# This means you can freely edit posts in content/posts/ after initial push —
-# edits to already-published posts are ignored.
-# Full chain: validate → promote to public repo → deploy → 1 hour → LinkedIn
+# Publishes on schedule only (Wed+Sat at noon CET).
+# Pushes to content/posts/ are just staging — they do NOT trigger a publish.
+# Manual dispatch available for one-off publishes.
+# Full chain: promote to public repo → deploy → 1 hour → LinkedIn
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'content/posts/**'
-      - 'data/publish-queue.json'
   schedule:
     # Wed+Sat at 10:00 UTC = 12:00 CEST
     - cron: '0 10 * * 3,6'
