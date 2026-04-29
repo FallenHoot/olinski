@@ -152,6 +152,8 @@ Pick one of the four lenses and bring it to your next architecture review:
 3. **Cost of organizational choices.** What are we paying for because ownership is unclear or duplicated?
 4. **Cost of inertia.** What are we paying for because change is harder than overspend?
 
+The harder question is what happens after the review. Someone needs to act on what you find. In my next post, I write about who that someone is, and how agentic AI can bridge the gap between seeing a cost problem and actually fixing it.
+
 Like my apple tree. A multi-grafted semi-dwarf can set 500 to 800 fruit after pollination. Without thinning, most of them stay small, compete for the same nutrients, and half drop before they ripen. The ones that survive attract wasps and codling moth larvae that spread to the healthy fruit. The tree exhausts itself producing apples nobody will eat and then has nothing left for next year.
 
 Orchardists thin 50 to 70% of that fruit on purpose. The "waste" is deliberate. It makes the remaining apples larger, healthier, and prevents alternate bearing where you get one good year followed by one terrible year.

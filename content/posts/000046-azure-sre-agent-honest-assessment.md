@@ -1,6 +1,6 @@
 ---
 title: "FinOps and SRE Belong Together. I Built the Bridge."
-description: "FinOps teams see the bill. SRE teams manage the resources. Neither has the full picture alone. I replaced 16,000 lines of PowerShell with 200 lines of YAML on the Azure SRE Agent platform to bring them together. Here is what I learned."
+description: "Most FinOps teams are one person spending 20% of their time. They see the cost problems. They cannot fix them. Agentic AI can be the operations team they do not have. Here is what I built and what it means for lean and mature teams alike."
 publishDate: 2026-05-07
 tags:
   - cloud-architecture
@@ -15,11 +15,42 @@ Most organizations treat FinOps and SRE as separate disciplines. FinOps watches 
 
 That separation is the problem.
 
-FinOps teams see cost anomalies. They do not have the technical permissions or context to fix them. They flag a VM as oversized, file a ticket, and wait. SRE teams see performance data. They right-size resources for reliability, not cost. Nobody is looking at both signals at the same time.
+In my [last post](/posts/000045-spring-cleaning-cloud-finops), I wrote about the four hard questions mature customers need to ask about cloud cost. The questions that go past orphaned resources and into architecture, product, data, and organizational choices. Those questions surface real problems. They do not solve them. Someone still needs to act.
+
+That is where most FinOps programs stall.
+
+## You are not alone, but you might as well be
+
+I talk to customers about FinOps and AI every week. The main issue is always the same: FinOps teams are lean. You are lucky if a single person spends 20% of their time on it. That is the norm. Even mature customers who staff five or more full-time FinOps resources hit the same wall. They can see the problems. They cannot fix them.
+
+FinOps teams do not have the SRE skills, the monitoring access, or the ability to change the infrastructure as code. They flag a VM as oversized, file a ticket, and wait. SRE teams see performance data. They right-size resources for reliability, not cost. Nobody is looking at both signals at the same time.
 
 I think of FinOps as Finance and Operations, not just cost control. The operations part means someone needs to actually change things in the environment. That someone is usually the SRE team, or should be.
 
-So I built a tool that combines both.
+The question is: what if you do not have an SRE team? What if the person doing FinOps 20% of the time is also the person expected to act on what they find?
+
+That is where agentic AI changes the equation.
+
+## How the idea started
+
+A few weeks ago I was at a FinOps workshop at IBM Norway. Someone showed me [Cloudgeni's Infrastructure Agents Guide](https://github.com/Cloudgeni-ai/infrastructure-agents-guide). It was interesting because it covered a lot of the same ground that my coworker Hélder Pinto had built into the Microsoft FinOps Toolkit with the Azure Optimization Engine.
+
+That workshop is where the idea clicked. The FinOps Toolkit already lets you talk to your FOCUS data using GitHub Copilot in Visual Studio. The optimization data is there. The intelligence is there. What is missing is the operations bridge: the agent that can take those insights and actually act on them without requiring a dedicated SRE team.
+
+That is when I pitched the Azure SRE Agent platform as the bridge. Use the agent to combine FinOps intelligence with SRE operational authority. Give lean teams a force multiplier. Give mature teams a way to automate the repetitive analysis that burns out their best people.
+
+## What agentic AI changes for FinOps teams
+
+For lean teams (one person at 20%), an agentic AI workflow does what they cannot staff for:
+
+- Queries Azure Monitor, Resource Graph, and Advisor APIs directly instead of waiting for batch exports
+- Correlates cost signals with performance data in seconds, not days
+- Validates whether a resize would actually work before recommending it
+- Runs on a schedule without anyone clicking buttons or checking dashboards
+
+The agent is not replacing the FinOps practitioner. It is giving them the SRE capabilities they do not have. The person who spends 20% of their time on cost now has an operations partner that runs continuously.
+
+For mature teams (five or more people), the value is different. They already have the skills. They do not have the time. The agent handles the repetitive investigation so the team can focus on the architecture and product questions from post 045 that actually require human judgment. Which resilience decisions are real requirements. Which data movement is organizational dysfunction. Which workloads are politically protected. No agent answers those. The agent handles the compute rightsizing so the team has bandwidth for the hard conversations.
 
 ## What I built
 
