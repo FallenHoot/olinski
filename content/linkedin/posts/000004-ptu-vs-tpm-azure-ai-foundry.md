@@ -1,6 +1,6 @@
 ---
 title: "Azure AI Foundry: The PTU vs TPM Debate You Cannot Ignore"
-publishDate: 2026-05-20
+publishDate: 2026-05-14
 tags:
   - cloud-architecture
   - finops

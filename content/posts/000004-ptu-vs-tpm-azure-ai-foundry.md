@@ -1,7 +1,7 @@
 ---
 title: "Azure AI Foundry: The PTU vs TPM Debate You Cannot Ignore"
 description: "PTUs sell out in 24 hours. Most customers use 6% of what they reserve. TPMs get zero allocation because PTU is more commercially viable. The cloud was supposed to let you scale what you need and give back the rest. Here is what is actually happening and what you should do about it."
-publishDate: 2026-05-20
+publishDate: 2026-05-14
 tags:
   - cloud-architecture
   - finops
