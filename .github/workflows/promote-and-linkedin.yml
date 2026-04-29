@@ -1,6 +1,14 @@
 name: Promote to Blog and Post to LinkedIn
 
-# Triggers when a post is added/updated in content/posts/ or publish-queue changes
+# Triggers when:
+# 1. A post is added/updated in content/posts/ — fully automated
+# 2. publish-queue.json is updated
+# 3. Cron: Wed+Sat at noon CET (scheduled publish)
+# 4. Manual dispatch
+#
+# Only promotes posts that exist in content/posts/ but NOT in content/published/.
+# This means you can freely edit posts in content/posts/ after initial push —
+# edits to already-published posts are ignored.
 # Full chain: validate → promote to public repo → deploy → 1 hour → LinkedIn
 
 on:
@@ -9,6 +17,9 @@ on:
     paths:
       - 'content/posts/**'
       - 'data/publish-queue.json'
+  schedule:
+    # Wed+Sat at 10:00 UTC = 12:00 CEST
+    - cron: '0 10 * * 3,6'
   workflow_dispatch:
     inputs:
       slug:
@@ -48,17 +59,32 @@ jobs:
           if [ -n "${{ inputs.slug }}" ]; then
             SLUG="${{ inputs.slug }}"
           else
-            # Find the first approved post in the queue
+            # Find the first approved post in the queue that is NOT already published
             SLUG=$(node -e "
               const fs = require('fs');
+              const path = require('path');
               const q = JSON.parse(fs.readFileSync('data/publish-queue.json','utf-8'));
-              const next = Array.isArray(q.queue) ? q.queue.find(item => item.approved && item.slug) : null;
+              if (!Array.isArray(q.queue)) process.exit(0);
+              const publishedDir = 'content/published';
+              const published = fs.existsSync(publishedDir) ? fs.readdirSync(publishedDir) : [];
+              const next = q.queue.find(item => {
+                if (!item.approved || !item.slug) return false;
+                // Skip if already in content/published/
+                return !published.some(f => f.startsWith(item.slug));
+              });
               if (next) console.log(next.slug);
             ")
           fi
 
           if [ -z "$SLUG" ]; then
-            echo "No approved post found. Nothing to promote."
+            echo "No unpublished approved post found. Nothing to promote."
+            echo "slug=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Skip if already published
+          if ls content/published/ 2>/dev/null | grep -q "^${SLUG}"; then
+            echo "Post ${SLUG} is already published. Skipping."
             echo "slug=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
