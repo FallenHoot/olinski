@@ -7,7 +7,7 @@ tags:
   - ai
   - compliance
 type: blog-linkedin-share
-linkedinPostId: "pending-review"
+linkedinPostId: "urn:li:share:7455509462804758529"
 variant: medium
 sourcePost: "content/posts/000003-ai-agent-governance-framework.md"
 canonicalUrl: "https://zach.olinske.com/posts/ai-agent-governance-starting-point"
