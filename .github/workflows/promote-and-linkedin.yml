@@ -1,18 +1,21 @@
-name: Promote to Blog and Post to LinkedIn
+name: Publish Blog and Post to LinkedIn
 
-# Publishes on schedule only (Wed+Sat at noon CET).
-# Pushes to content/posts/ are just staging — they do NOT trigger a publish.
-# Manual dispatch available for one-off publishes.
-# Full chain: promote to public repo → deploy → 1 hour → LinkedIn
+# Schedule: Wed+Sat at noon CET. Manual dispatch anytime.
+# Full chain: promote to public repo → wait for deploy → post to LinkedIn
+#
+# Logic:
+# 1. Find next approved post (from queue or manual slug input)
+# 2. If not yet in content/published/ → promote to public repo
+# 3. If LinkedIn post exists in linkedin/posts/ → wait for deploy, then post
+# 4. Move LinkedIn post to linkedin/published/
 
 on:
   schedule:
-    # Wed+Sat at 10:00 UTC = 12:00 CEST
     - cron: '0 10 * * 3,6'
   workflow_dispatch:
     inputs:
       slug:
-        description: 'Post slug to promote (e.g., 000045-spring-cleaning-cloud-finops)'
+        description: 'Post slug to publish (e.g., 000045-spring-cleaning-cloud-finops)'
         required: false
         type: string
 
@@ -20,16 +23,11 @@ permissions:
   contents: write
 
 jobs:
-  promote:
+  publish:
     runs-on: ubuntu-latest
-    # Skip bot commits to prevent loops
     if: >-
       github.event_name != 'push' ||
       !startsWith(github.event.head_commit.message, 'bot:')
-    outputs:
-      promoted: ${{ steps.push-public.outputs.promoted }}
-      slug: ${{ steps.detect.outputs.slug }}
-      post_path: ${{ steps.detect.outputs.post_path }}
 
     steps:
       - name: Checkout editorial repo
@@ -42,172 +40,141 @@ jobs:
         with:
           node-version: 22
 
-      - name: Detect post to promote
+      - name: Install deps
+        run: npm ci
+
+      # ── Step 1: Find the post to publish ────────────────────
+      - name: Detect post
         id: detect
         run: |
           if [ -n "${{ inputs.slug }}" ]; then
             SLUG="${{ inputs.slug }}"
           else
-            # Find the first approved post in the queue that is NOT already published
             SLUG=$(node -e "
               const fs = require('fs');
-              const path = require('path');
               const q = JSON.parse(fs.readFileSync('data/publish-queue.json','utf-8'));
               if (!Array.isArray(q.queue)) process.exit(0);
-              const publishedDir = 'content/published';
-              const published = fs.existsSync(publishedDir) ? fs.readdirSync(publishedDir) : [];
+              const published = fs.existsSync('content/published') ? fs.readdirSync('content/published') : [];
+              const linkedinPublished = fs.existsSync('content/linkedin/published') ? fs.readdirSync('content/linkedin/published') : [];
               const next = q.queue.find(item => {
                 if (!item.approved || !item.slug) return false;
-                // Skip if already in content/published/
-                return !published.some(f => f.startsWith(item.slug));
+                const blogDone = published.some(f => f.startsWith(item.slug));
+                const linkedinDone = linkedinPublished.some(f => f.startsWith(item.slug));
+                return !blogDone || !linkedinDone;
               });
               if (next) console.log(next.slug);
             ")
           fi
 
           if [ -z "$SLUG" ]; then
-            echo "No unpublished approved post found. Nothing to promote."
-            echo "slug=" >> "$GITHUB_OUTPUT"
+            echo "No post needs publishing. Done."
             exit 0
           fi
 
-          # Skip if already published
-          if ls content/published/ 2>/dev/null | grep -q "^${SLUG}"; then
-            echo "Post ${SLUG} is already published. Skipping."
-            echo "slug=" >> "$GITHUB_OUTPUT"
-            exit 0
+          # Check what needs to happen
+          NEEDS_PROMOTE="false"
+          NEEDS_LINKEDIN="false"
+
+          if ! ls content/published/ 2>/dev/null | grep -q "^${SLUG}"; then
+            if ls content/posts/ 2>/dev/null | grep -q "^${SLUG}"; then
+              NEEDS_PROMOTE="true"
+            fi
           fi
 
-          # Find the matching file in content/posts/
-          POST_FILE=$(ls content/posts/ | grep "^${SLUG}" | head -1)
-          if [ -z "$POST_FILE" ]; then
-            echo "No staged post found for slug ${SLUG} in content/posts/"
-            echo "slug=" >> "$GITHUB_OUTPUT"
+          if ls content/linkedin/posts/ 2>/dev/null | grep -q "^${SLUG}"; then
+            NEEDS_LINKEDIN="true"
+          fi
+
+          if [ "$NEEDS_PROMOTE" = "false" ] && [ "$NEEDS_LINKEDIN" = "false" ]; then
+            echo "Post ${SLUG} is fully published (blog + LinkedIn). Nothing to do."
             exit 0
           fi
 
           echo "slug=${SLUG}" >> "$GITHUB_OUTPUT"
-          echo "post_file=${POST_FILE}" >> "$GITHUB_OUTPUT"
-          echo "post_path=content/posts/${POST_FILE}" >> "$GITHUB_OUTPUT"
-          echo "Promoting: ${POST_FILE}"
+          echo "needs_promote=${NEEDS_PROMOTE}" >> "$GITHUB_OUTPUT"
+          echo "needs_linkedin=${NEEDS_LINKEDIN}" >> "$GITHUB_OUTPUT"
+          echo "Slug: ${SLUG} | Promote: ${NEEDS_PROMOTE} | LinkedIn: ${NEEDS_LINKEDIN}"
 
-      - name: Publish post (move to published, update status)
-        if: steps.detect.outputs.slug
-        run: |
-          POST_PATH="${{ steps.detect.outputs.post_path }}"
-          POST_FILE="${{ steps.detect.outputs.post_file }}"
-          PUBLISHED_PATH="content/published/${POST_FILE}"
-
-          # Update status to published and set today's date
-          sed -i "s/^status: .*/status: published/" "$POST_PATH"
-          sed -i "s/^publishDate: .*/publishDate: $(date -u +%Y-%m-%d)/" "$POST_PATH"
-
-          # Move to published
-          cp "$POST_PATH" "$PUBLISHED_PATH"
-          rm "$POST_PATH"
-
-          echo "Published: ${PUBLISHED_PATH}"
-
-      - name: Commit editorial changes
-        if: steps.detect.outputs.slug
-        run: |
-          git config user.name "publish-bot[bot]"
-          git config user.email "publish-bot[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
-          git commit -m "bot: publish ${{ steps.detect.outputs.slug }}"
-          git push
-
-      - name: Clone public repo and promote
-        id: push-public
-        if: steps.detect.outputs.slug
+      # ── Step 2: Promote to public repo (if needed) ──────────
+      - name: Promote blog post
+        id: promote
+        if: steps.detect.outputs.needs_promote == 'true'
         env:
           PUBLIC_REPO_PAT: ${{ secrets.PUBLIC_REPO_PAT }}
         run: |
+          SLUG="${{ steps.detect.outputs.slug }}"
+          POST_FILE=$(ls content/posts/ | grep "^${SLUG}" | head -1)
+
+          # Update status and date
+          sed -i "s/^status: .*/status: published/" "content/posts/${POST_FILE}"
+          sed -i "s/^publishDate: .*/publishDate: $(date -u +%Y-%m-%d)/" "content/posts/${POST_FILE}"
+
+          # Move to published
+          cp "content/posts/${POST_FILE}" "content/published/${POST_FILE}"
+          rm "content/posts/${POST_FILE}"
+          echo "Moved to content/published/${POST_FILE}"
+
+          # Commit to editorial repo
+          git config user.name "publish-bot[bot]"
+          git config user.email "publish-bot[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "bot: publish ${SLUG}"
+          git push
+
+          # Push to public repo
           PUBLIC_REPO="FallenHoot/olinske"
-          POST_FILE="${{ steps.detect.outputs.post_file }}"
-
-          if [ -z "$PUBLIC_REPO_PAT" ]; then
-            echo "Missing PUBLIC_REPO_PAT secret. Cannot promote."
-            exit 1
-          fi
-
-          # Clone public repo
           git clone "https://x-access-token:${PUBLIC_REPO_PAT}@github.com/${PUBLIC_REPO}.git" public-target
-
-          # Copy the published post
           cp "content/published/${POST_FILE}" "public-target/content/published/${POST_FILE}"
-
-          # Commit and push
           cd public-target
           git config user.name "publish-bot[bot]"
           git config user.email "publish-bot[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
             echo "No changes to push to public repo."
-            echo "promoted=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          else
+            git commit -m "Promote ${SLUG}"
+            git push
+            echo "Public repo updated. Azure deploy will trigger."
           fi
-          git commit -m "Promote ${{ steps.detect.outputs.slug }}"
-          git push
-          echo "promoted=true" >> "$GITHUB_OUTPUT"
-          echo "Public repo updated. Azure deploy will trigger."
 
-  linkedin:
-    needs: promote
-    if: needs.promote.outputs.promoted == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Wait 1 hour for blog to deploy
+          echo "promoted=true" >> "$GITHUB_OUTPUT"
+
+      # ── Step 3: Wait for blog to deploy (only if we just promoted) ──
+      - name: Wait for blog to deploy
+        if: steps.promote.outputs.promoted == 'true' && steps.detect.outputs.needs_linkedin == 'true'
         run: |
           echo "Waiting 60 minutes for Azure to deploy the blog..."
           echo "Started at: $(date -u)"
           sleep 3600
           echo "Wait complete at: $(date -u)"
 
-      - name: Checkout editorial repo
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install deps
-        run: npm ci
-
+      # ── Step 4: Post to LinkedIn (if needed) ────────────────
       - name: Post to LinkedIn
+        if: steps.detect.outputs.needs_linkedin == 'true'
         env:
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           LINKEDIN_PERSON_URN: ${{ secrets.LINKEDIN_PERSON_URN }}
         run: |
-          SLUG="${{ needs.promote.outputs.slug }}"
-          LINKEDIN_POST=$(ls content/linkedin/posts/ | grep "^${SLUG}" | head -1)
+          SLUG="${{ steps.detect.outputs.slug }}"
+          POST_FILE=$(ls content/published/ | grep "^${SLUG}" | head -1)
 
-          if [ -z "$LINKEDIN_POST" ]; then
-            echo "No LinkedIn post found for ${SLUG}. Skipping."
-            exit 0
-          fi
+          echo "Posting LinkedIn for ${SLUG}"
+          node scripts/post-to-linkedin.mjs --post "content/published/${POST_FILE}" --variant medium
 
-          echo "Posting LinkedIn variant for ${SLUG}"
-          node scripts/post-to-linkedin.mjs --post "content/published/${SLUG}*.md" --variant medium
-
+      # ── Step 5: Move LinkedIn post to published ─────────────
       - name: Move LinkedIn post to published
+        if: steps.detect.outputs.needs_linkedin == 'true'
         run: |
-          SLUG="${{ needs.promote.outputs.slug }}"
-          LINKEDIN_POST=$(ls content/linkedin/posts/ | grep "^${SLUG}" | head -1)
+          SLUG="${{ steps.detect.outputs.slug }}"
+          LINKEDIN_POST=$(ls content/linkedin/posts/ 2>/dev/null | grep "^${SLUG}" | head -1)
 
           if [ -n "$LINKEDIN_POST" ]; then
             mkdir -p content/linkedin/published
             mv "content/linkedin/posts/${LINKEDIN_POST}" "content/linkedin/published/${LINKEDIN_POST}"
-            git config user.name "publish-bot[bot]"
-            git config user.email "publish-bot[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "bot: linkedin published ${SLUG}" || true
-            git push || true
           fi
+
+          git config user.name "publish-bot[bot]"
+          git config user.email "publish-bot[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "bot: linkedin posted ${SLUG}" || true
+          git push || true

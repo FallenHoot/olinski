@@ -1,38 +1,27 @@
 ---
 title: "AI Agent Governance: A Starting Point Nobody Gave Me"
-publishDate: Wed Apr 22 2026 02:00:00 GMT+0200 (Central European Summer Time)
+publishDate: 2026-04-29
 tags:
   - ai-strategy
   - governance
   - ai
-  - compliance
 type: blog-linkedin-share
-linkedinPostId: "urn:li:share:7455509462804758529"
+linkedinPostId: "pending"
 variant: medium
-sourcePost: "content/posts/000003-ai-agent-governance-framework.md"
-canonicalUrl: "https://zach.olinske.com/posts/ai-agent-governance-starting-point"
+sourcePost: "content/published/000003-ai-agent-governance-framework.md"
+canonicalUrl: "https://zach.olinske.com/posts/000003-ai-agent-governance-framework"
 hashtags:
   - AgenticAI
   - AIGovernance
   - CloudArchitecture
-  - AIAgents
-  - TechBlog
 ---
 
-My LinkedIn automation posted a draft with a broken link before I knew it happened. People commented. The blog had never published it.
+My LinkedIn automation posted a draft with a broken link before I knew it happened. People started commenting. The blog had never actually published it.
 
 I had 15 AI agents with quality gates, review loops, and approval workflows. None of them caught this. The problem was not the agents. It was me adding new functionality that bypassed the gates I already had.
 
-That is the same problem every enterprise deploying AI agents faces right now. The agents work. The governance does not exist yet.
+That experience forced a question I could not find a good answer to anywhere: what does practitioner-level agent governance actually look like? Not NIST frameworks. Not EU AI Act compliance decks. The practical stuff. What does an engineering team implement before letting an agent make decisions?
 
-After that mistake, I built a practitioner governance model. Seven controls, each grounded in what actually went wrong in my own pipeline:
+I built a model from my own mistakes. Seven controls. I wrote about what each one does and why it exists.
 
-- Decision Authority: which decisions are agent-eligible vs human-reserved?
-- Agent Identity and Scope: least-privilege, one purpose per agent
-- Audit and Logging: every decision recorded
-- Human Escalation: one flag means manual review, no silent passes
-- Testing: test what happens when agents introduce changes after the review gate
-- Monitoring: catch drift before it becomes a pattern
-- Rollback: know how to stop an agent and reverse its decisions
-
-I learned this from a broken LinkedIn link. You do not have to learn it that way.
+What is the worst thing an AI agent has done in your environment that nobody caught in time?
