@@ -1,7 +1,7 @@
 ---
 title: "FinOps and SRE Belong Together. I Built the Bridge."
 description: "Most FinOps teams are one person spending 20% of their time. They see the cost problems. They cannot fix them. Agentic AI can be the operations team they do not have. Here is what I built and what it means for lean and mature teams alike."
-publishDate: 2026-05-07
+publishDate: 2026-06-03
 tags:
   - cloud-architecture
   - ai-strategy

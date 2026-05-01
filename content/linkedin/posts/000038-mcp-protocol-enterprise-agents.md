@@ -1,6 +1,6 @@
 ---
 title: "MCP: The Protocol That Might Actually Connect AI Agents to Enterprise Systems"
-publishDate: 2026-05-10
+publishDate: 2026-05-27
 tags:
   - ai-strategy
   - cloud-architecture

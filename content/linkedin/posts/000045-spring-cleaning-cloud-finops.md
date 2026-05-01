@@ -1,6 +1,6 @@
 ---
 title: "Spring Cleaning Your Cloud: Past the Quick Wins Into the Hard Questions"
-publishDate: 2026-05-03
+publishDate: 2026-05-30
 tags:
   - cloud-architecture
   - finops

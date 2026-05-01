@@ -1,7 +1,7 @@
 ---
 title: "BCDR for AKS: What Fails and What Doesn't"
 description: "Kubernetes BCDR is not the same as VM BCDR. Here are patterns that work across regions, zone failures, and cluster upgrades."
-publishDate: 2026-04-21
+publishDate: 2026-05-23
 tags:
   - bcdr
   - kubernetes

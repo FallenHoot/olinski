@@ -1,6 +1,6 @@
 ---
 title: "FinOps and SRE Belong Together. I Built the Bridge."
-publishDate: 2026-05-07
+publishDate: 2026-06-03
 tags:
   - cloud-architecture
   - finops

@@ -1,6 +1,6 @@
 ---
 title: "Azure AI Foundry: The PTU Trap Behind TPM Scarcity"
-publishDate: 2026-05-14
+publishDate: 2026-05-06
 tags:
   - cloud-architecture
   - finops

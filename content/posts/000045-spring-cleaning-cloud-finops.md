@@ -1,7 +1,7 @@
 ---
 title: "Spring Cleaning Your Cloud: Past the Quick Wins Into the Hard Questions"
 description: "Quick wins are table stakes. For mature cloud customers, the real question is not where is the waste. It is what are we choosing to spend money on, and is that choice still justified. Here are the hard questions that make people uncomfortable."
-publishDate: 2026-05-03
+publishDate: 2026-05-30
 tags:
   - cloud-architecture
   - finops
