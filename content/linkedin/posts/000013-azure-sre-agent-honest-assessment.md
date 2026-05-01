@@ -8,8 +8,8 @@ tags:
 type: blog-linkedin-share
 linkedinPostId: "pending"
 variant: medium
-sourcePost: "content/posts/000046-azure-sre-agent-honest-assessment.md"
-canonicalUrl: "https://zach.olinske.com/posts/000046-azure-sre-agent-honest-assessment"
+sourcePost: "content/posts/000013-azure-sre-agent-honest-assessment.md"
+canonicalUrl: "https://zach.olinske.com/posts/000013-azure-sre-agent-honest-assessment"
 hashtags:
   - FinOps
   - SRE

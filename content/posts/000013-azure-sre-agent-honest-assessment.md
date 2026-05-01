@@ -15,7 +15,7 @@ Most organizations treat FinOps and SRE as separate disciplines. FinOps watches 
 
 That separation is the problem.
 
-In my [last post](/posts/000045-spring-cleaning-cloud-finops), I wrote about the four hard questions mature customers need to ask about cloud cost. The questions that go past orphaned resources and into architecture, product, data, and organizational choices. Those questions surface real problems. They do not solve them. Someone still needs to act.
+In my [last post](/posts/000012-spring-cleaning-cloud-finops), I wrote about the four hard questions mature customers need to ask about cloud cost. The questions that go past orphaned resources and into architecture, product, data, and organizational choices. Those questions surface real problems. They do not solve them. Someone still needs to act.
 
 That is where most FinOps programs stall.
 

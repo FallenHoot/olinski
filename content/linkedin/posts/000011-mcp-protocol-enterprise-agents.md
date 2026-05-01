@@ -8,8 +8,8 @@ tags:
 type: blog-linkedin-share
 linkedinPostId: "pending"
 variant: medium
-sourcePost: "content/posts/000038-mcp-protocol-enterprise-agents.md"
-canonicalUrl: "https://zach.olinske.com/posts/000038-mcp-protocol-enterprise-agents"
+sourcePost: "content/posts/000011-mcp-protocol-enterprise-agents.md"
+canonicalUrl: "https://zach.olinske.com/posts/000011-mcp-protocol-enterprise-agents"
 hashtags:
   - MCP
   - AIAgents
