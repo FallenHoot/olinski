@@ -20,7 +20,7 @@ The first multi-agent demo I saw worked perfectly.
 
 Agents called each other in sequence, every step succeeded, and everyone was impressed.
 
-Then someone asked: what if Agent 2 takes 40 minutes?
+Then someone asked: what if Agent 2 takes a long time?
 
 The synchronous chain breaks. Everything waiting on Agent 2 is blocked. The whole system stalls.
 

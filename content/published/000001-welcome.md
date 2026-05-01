@@ -39,3 +39,7 @@ This is not a neutral publication. I have opinions and I will state them. It is 
 Primarily myself. Writing forces clarity. If you find it useful, I am glad. If you disagree with something, even better.
 
 Signal Over Hype starts here.
+
+---
+
+**Disclaimer:** I work at Microsoft. The views expressed here are my own and based solely on publicly available information. This content is for educational purposes and does not represent official Microsoft guidance or commitments.
