@@ -20,3 +20,11 @@ This repository is promoted from a private editorial repository after human appr
 ## Export metadata
 
 Latest export details are in EXPORT-METADATA.json.
+
+## Git safety
+
+This repository enforces a local pre-push check to prevent accidental local-only changes.
+
+1. Install dependencies once (or run `npm run hooks:install`) to activate hooks.
+2. Use `npm run git:sync -- "your commit message"` to stage all changes, commit, and push to `origin/main`.
+3. If there are no changes, the sync command exits safely.
