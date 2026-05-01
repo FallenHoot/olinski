@@ -9,7 +9,7 @@ type: blog-linkedin-share
 linkedinPostId: "pending"
 variant: medium
 sourcePost: "content/published/000003-ai-agent-governance-framework.md"
-canonicalUrl: "https://zach.olinske.com/posts/000003-ai-agent-governance-framework"
+canonicalUrl: "https://zach.olinske.com/posts/ai-agent-governance-starting-point"
 hashtags:
   - AgenticAI
   - AIGovernance

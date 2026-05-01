@@ -8,7 +8,8 @@ const posts = defineCollection({
     description: z.string().min(20),
     publishDate: z.coerce.date(),
     tags: z.array(z.string()).default([]),
-    status: z.enum(['backlog', 'research', 'draft', 'review', 'approved', 'scheduled', 'published'])
+    status: z.enum(['backlog', 'research', 'draft', 'review', 'approved', 'scheduled', 'published']),
+    slug: z.string().optional()
   })
 });
 

@@ -8,6 +8,7 @@ tags:
   - ai
   - compliance
 status: published
+slug: ai-agent-governance-starting-point
 ---
 
 In my last post I described the 15-agent pipeline I built to get this blog from 100 stalled drafts to actually publishing. That pipeline works. What I did not describe is the first time it failed.
