@@ -27,6 +27,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
+const SITE_BASE_URL = (process.env.BLOG_BASE_URL || 'https://zach.olinske.com').replace(/\/$/, '');
 
 // ── Args ──────────────────────────────────────────────────────
 function argValue(flag, defaultValue = '') {
@@ -87,10 +88,10 @@ const distPath = join(ROOT, '.artifacts', 'blog', slug, 'linkedin-distribution.j
 
 // ── Parse frontmatter ─────────────────────────────────────────
 function parseFrontmatter(content) {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) return { meta: {}, body: content };
   const meta = {};
-  for (const line of match[1].split('\n')) {
+  for (const line of match[1].split(/\r?\n/)) {
     const kv = line.match(/^(\w[\w-]*):\s*(.+)/);
     if (kv) {
       let val = kv[2].trim();
@@ -108,9 +109,11 @@ const { meta: linkedinMeta, body: linkedinBody } = parseFrontmatter(linkedinRaw)
 // Read distribution JSON for canonical URL if available
 let canonicalUrl = linkedinMeta.canonicalUrl || '';
 let hashtags = [];
+let distCanonicalUrl = '';
 
 if (existsSync(distPath)) {
   const dist = JSON.parse(readFileSync(distPath, 'utf-8'));
+  distCanonicalUrl = dist.canonicalUrl || '';
   canonicalUrl = canonicalUrl || dist.canonicalUrl || '';
   hashtags = dist.hashtags || [];
 } else {
@@ -119,6 +122,62 @@ if (existsSync(distPath)) {
   if (hashtagMatch) {
     hashtags = hashtagMatch[1].match(/- (\S+)/g)?.map(h => h.replace('- ', '')) || [];
   }
+}
+
+// ── Governance guardrails (block unsafe posts) ───────────────
+if (!linkedinMeta.sourcePost) {
+  console.error('LinkedIn post is missing sourcePost in frontmatter.');
+  process.exit(1);
+}
+
+const sourcePostPath = join(ROOT, linkedinMeta.sourcePost);
+if (!existsSync(sourcePostPath)) {
+  console.error(`LinkedIn sourcePost does not exist: ${linkedinMeta.sourcePost}`);
+  process.exit(1);
+}
+
+const sourceFileName = basename(sourcePostPath);
+const fallbackPublishedSourcePath = join(ROOT, 'content', 'published', sourceFileName);
+
+let effectiveSourcePostPath = sourcePostPath;
+const normalizedSourcePostPath = sourcePostPath.replace(/\\/g, '/');
+if (!normalizedSourcePostPath.includes('/content/published/')) {
+  if (!existsSync(fallbackPublishedSourcePath)) {
+    console.error(`LinkedIn sourcePost must point to content/published/, got: ${linkedinMeta.sourcePost}`);
+    process.exit(1);
+  }
+  effectiveSourcePostPath = fallbackPublishedSourcePath;
+}
+
+const sourceRaw = readFileSync(effectiveSourcePostPath, 'utf-8');
+const { meta: sourceMeta } = parseFrontmatter(sourceRaw);
+if ((sourceMeta.status || '').toLowerCase() !== 'published') {
+  console.error(`LinkedIn source post is not published (status=${sourceMeta.status || 'missing'}): ${effectiveSourcePostPath}`);
+  process.exit(1);
+}
+
+if (!canonicalUrl) {
+  console.error('Missing canonicalUrl. Refusing to post to LinkedIn.');
+  process.exit(1);
+}
+
+const sourceSlug = basename(effectiveSourcePostPath, '.md');
+const expectedCanonicalUrl = `${SITE_BASE_URL}/posts/${sourceSlug}`;
+const normalized = (url) => url.replace(/\/$/, '');
+
+if (normalized(canonicalUrl) !== normalized(expectedCanonicalUrl)) {
+  console.error(`Canonical URL mismatch. expected=${expectedCanonicalUrl} actual=${canonicalUrl}`);
+  process.exit(1);
+}
+
+if (distCanonicalUrl && normalized(distCanonicalUrl) !== normalized(expectedCanonicalUrl)) {
+  console.error(`Artifact canonical URL mismatch. expected=${expectedCanonicalUrl} dist=${distCanonicalUrl}`);
+  process.exit(1);
+}
+
+if (/https?:\/\//i.test(linkedinBody)) {
+  console.error('LinkedIn body must not contain a hardcoded URL. URL must come from canonicalUrl only.');
+  process.exit(1);
 }
 
 // Build the commentary text (the LinkedIn post body + hashtags)

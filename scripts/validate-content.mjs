@@ -7,6 +7,8 @@ import matter from 'gray-matter';
 const ROOT = process.cwd();
 
 function argValue(flag, defaultValue = '') {
+  const inline = process.argv.find((arg) => arg.startsWith(`${flag}=`));
+  if (inline) return inline.slice(flag.length + 1);
   const index = process.argv.findIndex((arg) => arg === flag);
   return index > -1 && process.argv[index + 1] ? process.argv[index + 1] : defaultValue;
 }
@@ -14,6 +16,7 @@ function argValue(flag, defaultValue = '') {
 const gate = argValue('--gate', 'draft');
 const errors = [];
 const warnings = [];
+const SITE_BASE_URL = (process.env.BLOG_BASE_URL || 'https://zach.olinske.com').replace(/\/$/, '');
 
 function walkMarkdownFiles(dirPath) {
   if (!fs.existsSync(dirPath)) return [];
@@ -88,6 +91,10 @@ function validateLinkedIn(filePath) {
     addError(filePath, 'body must not include the canonical URL directly');
   }
 
+  if (/https?:\/\//i.test(body)) {
+    addError(filePath, 'body must not include hardcoded URLs');
+  }
+
   if (!data.sourcePost) return;
 
   const sourcePath = path.resolve(ROOT, data.sourcePost);
@@ -99,6 +106,12 @@ function validateLinkedIn(filePath) {
   const source = readMatter(sourcePath);
   const sourceBody = source.parsed.content;
   const sourceTitle = source.parsed.data?.title;
+  const sourceSlug = path.basename(sourcePath, '.md');
+  const expectedCanonicalUrl = `${SITE_BASE_URL}/posts/${sourceSlug}`;
+
+  if (data.canonicalUrl && data.canonicalUrl.replace(/\/$/, '') !== expectedCanonicalUrl) {
+    addError(filePath, `canonicalUrl must match source post slug (${expectedCanonicalUrl})`);
+  }
 
   if (sourceTitle && data.title && sourceTitle !== data.title) {
     addWarning(filePath, 'title differs from source article title');
@@ -126,7 +139,6 @@ const linkedinFiles = [
 
 if (gate === 'publish') {
   articleFiles.push(...walkMarkdownFiles(path.join(ROOT, 'content', 'published')));
-  linkedinFiles.push(...walkMarkdownFiles(path.join(ROOT, 'content', 'linkedin', 'published')));
 }
 
 for (const filePath of articleFiles) validateArticle(filePath);

@@ -148,6 +148,15 @@ jobs:
           sleep 3600
           echo "Wait complete at: $(date -u)"
 
+      - name: Validate LinkedIn post guardrails
+        if: steps.detect.outputs.needs_linkedin == 'true'
+        run: |
+          SLUG="${{ steps.detect.outputs.slug }}"
+          POST_FILE=$(ls content/published/ | grep "^${SLUG}" | head -1)
+
+          echo "Validating LinkedIn guardrails for ${SLUG}"
+          node scripts/post-to-linkedin.mjs --post "content/published/${POST_FILE}" --variant medium --dry-run
+
       # ── Step 4: Post to LinkedIn (if needed) ────────────────
       - name: Post to LinkedIn
         if: steps.detect.outputs.needs_linkedin == 'true'

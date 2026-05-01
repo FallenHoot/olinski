@@ -36,6 +36,18 @@ jobs:
       - name: Install deps
         run: npm ci
 
+      - name: Validate LinkedIn post guardrails
+        run: |
+          SLUG="${{ inputs.slug }}"
+          POST_FILE=$(ls content/published/ | grep "^${SLUG}" | head -1)
+
+          if [ -z "$POST_FILE" ]; then
+            echo "No published post found for ${SLUG}."
+            exit 1
+          fi
+
+          node scripts/post-to-linkedin.mjs --post "content/published/${POST_FILE}" --variant medium --dry-run
+
       - name: Post to LinkedIn
         env:
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
