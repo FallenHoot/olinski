@@ -1,5 +1,5 @@
 ---
-title: "Azure AI Foundry: The PTU vs TPM Debate You Cannot Ignore"
+title: "Azure AI Foundry: The PTU Trap Behind TPM Scarcity"
 publishDate: 2026-05-14
 tags:
   - cloud-architecture
@@ -16,12 +16,18 @@ hashtags:
   - CloudArchitecture
 ---
 
-A customer asked me to help them get GPU capacity on Azure. I reached out to the capacity team. The answer: pay-as-you-go has zero allocation in your region. All of it went to PTU. PTU sold out in 24 hours.
+A customer asked me to help them get GPU capacity on Azure.
 
-The customer who did get PTU? Using 6% of it. Will not release it because they know they will never get it back.
+We checked the region. Pay-as-you-go throughput was effectively unavailable. The realistic path was PTU.
 
-The cloud was supposed to let you use what you need and give back the rest. That promise breaks when the allocation model rewards hoarding.
+Customers who do get PTU can end up using only a small fraction of it. They still will not release it, because they know they may never get it back.
 
-I wrote about what is actually happening with AI capacity and what to do about it before the next sell-out.
+That is the problem.
 
-Has your team tried to get AI capacity recently? What happened?
+PTU creates certainty, but it also creates hoarding when supply is tight. The cloud promise breaks when the allocation model rewards holding capacity more than using it.
+
+In low-utilization cases, PTU can look wildly inefficient versus TPM, so the waste becomes a FinOps issue too.
+
+I wrote about what is happening and how to think about it before you commit too early.
+
+Has your team tried to get AI capacity recently? Did you go TPM, PTU, or multi-region?

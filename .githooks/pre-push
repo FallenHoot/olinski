@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Block pushes when local changes are still uncommitted.
+if [ -n "$(git status --porcelain)" ]; then
+  echo "[pre-push] Push blocked: you have uncommitted changes."
+  echo "[pre-push] Commit or stash everything before pushing to avoid losing edits."
+  git status --short
+  exit 1
+fi
+
+exit 0

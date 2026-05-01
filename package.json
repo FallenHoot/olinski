@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "start": "astro preview --host 0.0.0.0 --port 8080",
+    "hooks:install": "node scripts/install-git-hooks.mjs",
     "check": "astro check",
     "check:content": "node scripts/validate-content.mjs",
     "check:content:review": "node scripts/validate-content.mjs --gate=review",
