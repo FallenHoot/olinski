@@ -8,8 +8,8 @@ tags:
 type: blog-linkedin-share
 linkedinPostId: "pending"
 variant: medium
-sourcePost: "content/posts/2026-06-02-sovereign-cloud-history.md"
-canonicalUrl: "https://zach.olinske.com/posts/2026-06-02-sovereign-cloud-history"
+sourcePost: "content/posts/000015-sovereign-cloud-history.md"
+canonicalUrl: "https://zach.olinske.com/posts/000015-sovereign-cloud-history"
 hashtags:
   - CloudArchitecture
   - SovereignCloud
