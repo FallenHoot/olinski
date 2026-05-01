@@ -72,6 +72,24 @@ The result is lower ecosystem efficiency even while gross infrastructure investm
 
 At the company level, this shows up as stranded spend, poor utilization, and weaker unit economics. At the market level, it shows up as long lead times, uneven regional availability, and priority fights over who gets served first.
 
+### Visual: scarcity feedback loop
+
+```text
+[Scarcity risk rises]
+  |
+  v
+[Teams hoard capacity]
+  |
+  v
+[Effective available capacity shrinks]
+  |
+  v
+[Allocation pressure increases]
+  |
+  v
+[Scarcity risk rises again]
+```
+
 ## Where constraints actually bind today
 
 Most teams describe this as a "GPU shortage". That is too narrow.
@@ -117,6 +135,17 @@ A better mental model is to treat cloud capacity like a pipeline with staged lea
 
 This model makes one fact obvious: your future elasticity is mostly determined before your future demand arrives.
 
+### Visual: capacity pipeline
+
+```text
+[Intent to build]
+  -> [Power and site readiness]
+  -> [Silicon and packaging availability]
+  -> [Server integration and deployment]
+  -> [Regional allocation]
+  -> [Customer-consumable capacity]
+```
+
 ## Capacity constraints are cross-vendor
 
 This is bigger than one platform.
@@ -130,6 +159,19 @@ Different vendors expose the pressure differently. The underlying constraint pat
 - Enterprise buyers respond by pre-allocating capacity and reducing optionality.
 
 No single company can solve this in one quarter.
+
+### Additional binding constraints often missed
+
+The obvious constraints get most of the airtime. The boring constraints often decide what ships.
+
+1. **Grid process constraints, not only generation:** interconnection queues, utility processes, and regulator timelines can delay large-load energization even when generation exists.
+2. **Electrical equipment and commissioning bottlenecks:** substations, high-voltage transformers, switchgear, and specialized commissioning labor can become long-lead gating items.
+3. **Cooling supply chain constraints:** liquid-cooling ecosystems introduce additional dependencies across cold plates, pumps, manifolds, heat exchangers, facility retrofits, and site commissioning.
+4. **Network and optics constraints:** high-speed switching, optical transceivers, fiber routes, cross-connects, and NIC qualification often limit usable AI cluster scale.
+5. **Rack-to-revenue pipeline constraints:** burn-in, firmware validation, cluster integration, topology tuning, security controls, and audit sign-off delay the time between delivery and consumable capacity.
+6. **Country-level policy constraints:** energy policy, permitting rules, and load prioritization can become the binding layer above technical readiness.
+
+When these layers are uncertain, teams treat compute as inventory rather than utility. That behavior is the root of hoarding.
 
 ## The economics that drive hoarding behavior
 
@@ -154,6 +196,32 @@ In practical terms, expected failure cost includes:
 
 This is why generic utilization targets can backfire. A hard utilization target can improve monthly spend and increase annual business risk.
 
+### Quota does not guarantee capacity
+
+One missing distinction explains most hoarding behavior: quota is an authorization limit, not a deployment-time capacity guarantee.
+
+In practical terms, capacity is frequently allocated at deployment time and held while the deployment exists. Releasing capacity can improve short-term utilization metrics, but it can also create reacquisition risk later. Teams internalize this quickly.
+
+A useful operating sentence is simple: quota limits what you are allowed to deploy. It does not guarantee that capacity exists when you need it.
+
+### Real-world behavior: why capacity sniping fails
+
+Some teams try to automate capacity acquisition by polling and deploying rapidly when capacity appears.
+
+In practice, this approach rarely works in constrained provisioned-capacity environments.
+
+Deployment success depends on a specific combination of region, model, quota, and real-time backend placement availability. Quota can exist while deployment still fails.
+
+The important mechanism is allocation plus retention. Capacity is allocated at deployment time and held while the deployment exists. Capacity is not continuously exposed as a simple first-come, first-served public pool.
+
+The operational conclusion is direct: reacquiring capacity is not primarily a timing problem. It is a placement and allocation problem.
+
+This is why teams that have already secured capacity often choose to retain it rather than rely on reacquisition.
+
+### Concrete scenario (anonymized)
+
+A platform team keeps 30% idle GPU headroom in a constrained region. Finance sees low utilization and asks for immediate release. The platform team resists because releasing PTU risks losing placement and missing the next enterprise demand spike. The utilization metric looks inefficient in isolation, but the expected cost of failed reacquisition is higher than the carrying cost of reserved headroom.
+
 ### Why signals lag reality
 
 Most enterprises see constraints too late because they monitor only cloud-side metrics:
@@ -163,6 +231,19 @@ Most enterprises see constraints too late because they monitor only cloud-side m
 - Regional stockouts
 
 By the time these appear, upstream constraints have already propagated. Better teams monitor both upstream and downstream signals.
+
+### Time asymmetry and option-preserving behavior
+
+Capacity decisions are asymmetric in time. Allocating can be fast. Reacquiring later can be uncertain.
+
+That asymmetry produces a stack of option-preserving behaviors:
+
+1. **Allocation hoarding:** holding GPU, PTU, or reserved capacity to avoid losing placement.
+2. **Topology hoarding:** keeping node pools larger because future scale-out may fail.
+3. **Region hoarding:** staying anchored to constrained regions because relocation and revalidation are expensive.
+4. **Governance hoarding:** retaining allocations because release approvals are harder than overspend approvals.
+
+This is not irrational behavior. It is rational behavior under uncertainty.
 
 ## From dust to product: the compute supply chain
 
@@ -256,6 +337,15 @@ FinOps and reliability teams should review one shared weekly pack:
 
 If these reviews are separate, the business sees conflicting guidance.
 
+### Control plane versus data plane elasticity
+
+The elasticity illusion often breaks first in the control plane, not the data plane.
+
+- **Data plane:** servers, GPUs, memory, network fabric, power, and cooling.
+- **Control plane:** quotas, placement decisions, approvals, prioritization, and policy guardrails.
+
+Elasticity degrades when the control plane starts rationing the data plane. Once allocations are held by policy and reacquisition is uncertain, customers behave like inventory managers.
+
 ## What this means for architecture decisions
 
 In constrained cycles, architecture choices should favor graceful degradation and portability over peak efficiency.
@@ -303,6 +393,10 @@ That shift changes incentives, planning cadence, and architecture governance.
 5. Add supply-risk checkpoints to architecture and FinOps reviews.
 6. Build a single dashboard for both allocation risk and cost risk.
 7. Run one simulation exercise: assume a 30-day constrained allocation period and test your reacquisition playbooks.
+8. Define release triggers explicitly: utilization threshold, forecast confidence, and reacquisition risk score.
+9. Define release authority explicitly: FinOps owner, platform owner, and workload owner.
+10. Define fallback explicitly: alternate region, alternate SKU, and degraded service mode if reacquisition fails.
+11. Separate baseline capacity from option-value capacity so risk buffers are measured instead of debated.
 
 A simple operating rule helps: reserve with intent, release with confidence, and design for reacquisition risk.
 
@@ -315,6 +409,8 @@ Advanced teams can go further:
 3. Introduce preemption policies for low-priority workloads.
 4. Measure policy quality by avoided incident cost, not only by utilization.
 5. Track mean time to reacquire (MTTRq) as an executive KPI.
+
+MTTRq is the time from "we need capacity" to "capacity is running in production."
 
 ## References
 
@@ -336,6 +432,10 @@ Advanced teams can go further:
   https://www.micron.com/about/newsroom
 - U.S. Department of Energy note on FERC large-load interconnection reform (April 16, 2026): policy signal on power interconnection constraints for large loads.
   https://www.energy.gov/articles/energy-deputy-secretary-danly-commends-ferc-action-large-load-interconnection-reform
+- What Is Provisioned Throughput for Azure OpenAI in Azure AI Foundry: quota and deployment-time capacity behavior.
+  https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/provisioned-throughput
+- PTU Capacity Sniper (public experiment illustrating placement constraints in constrained environments).
+  https://github.com/FallenHoot/ptu-capacity-sniper
 
 Notes for draft context:
 - Some institutional power-grid sources and selected investor portals were intermittently blocked during retrieval. Claims above are grounded in accessible official releases at time of writing.
