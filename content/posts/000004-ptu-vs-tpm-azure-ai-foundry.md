@@ -1,6 +1,6 @@
 ---
-title: "Azure AI Foundry: The PTU vs TPM Debate You Cannot Ignore"
-description: "PTUs sell out in 24 hours. Most customers use 6% of what they reserve. TPMs get zero allocation because PTU is more commercially viable. The cloud was supposed to let you scale what you need and give back the rest. Here is what is actually happening and what you should do about it."
+title: "Azure AI Foundry: The PTU Trap Behind TPM Scarcity"
+description: "When pay-as-you-go capacity is effectively unavailable, enterprises get pushed into PTU long before utilization justifies it. That turns AI capacity into stranded cost and breaks the cloud's elasticity promise."
 publishDate: 2026-05-14
 tags:
   - cloud-architecture
@@ -12,176 +12,176 @@ status: draft
 
 The cloud was built on a promise: use what you need, give back the rest, pay for what you consumed.
 
-That promise was always idealized. NIST defines cloud computing around rapid elasticity and measured service. Every hyperscaler markets pay-as-you-go. In practice, the promise requires deliberate architecture, governance, and operational discipline. You pay for VM sizes, not CPU cycles. You pay for database SKUs, not queries. Capacity is not automatically reclaimed unless you design for autoscaling and shutdown. The moment you buy Reserved Instances or Savings Plans, you are trading elasticity for price predictability. That tradeoff is often correct. It is also a departure from the original promise.
+That promise was always idealized. Cloud never meant infinite elasticity. You still buy VM sizes, storage tiers, and commitments. Reserved capacity has always existed. That is not the problem.
 
-I accept all of that. Cloud has always had coarse allocation, baseline costs for stateful services, and commitments that dilute the elasticity model.
+The problem starts when the practical path to AI capacity stops being pay-as-you-go and starts being reservation first.
 
-What I do not accept is a system where the pay-as-you-go option has zero allocation, where committed capacity sells out in 24 hours, and where customers hoard resources at 6% utilization because releasing them means losing them forever. That is not a tradeoff. That is a broken model.
+That is the pattern I keep seeing with Azure AI Foundry.
 
-Provisioned Throughput Units are where this breaks.
+I am not speaking for Microsoft here. This is my interpretation of what I see working with large enterprises across regions.
 
-I am not speaking for Microsoft here. This reflects what I see working with large enterprises across regions.
+A customer asks for AI capacity in a region. They want the normal cloud model: start on Standard deployment, pay per token, learn the traffic shape, then optimize later. Instead, the answer comes back that pay-as-you-go capacity is effectively unavailable in that region and the realistic path is PTU.
 
-I work with the 15 largest companies in Norway and several international ones. I have this conversation every month. A customer wants to deploy an AI workload on Azure AI Foundry. They ask about pay-as-you-go pricing (TPM, Tokens Per Minute). I reach out to Azure capacity leads. The answer comes back: the tokens-per-minute SKU has zero allocation in your region. All available GPU capacity was assigned to PTU. PTU sold out within 24 hours of being released.
+Sometimes PTU availability disappears quickly as well. The result is that customers buy committed capacity before they have committed demand.
 
-The customer now has two options: buy PTU capacity they will barely use, or wait for an allocation that may never come.
+That is not a pricing detail. That is a design problem.
 
-This is not a pricing optimization question. This is a structural capacity allocation decision that changes the economics of AI for every enterprise on Azure.
+## The thesis
 
-## How GPU capacity actually gets allocated
+When capacity is tight, PTU optimizes for allocation certainty. TPM optimizes for utilization efficiency. If the system over-optimizes for certainty, customers are pushed into reserving throughput long before their workload justifies it.
 
-When new servers arrive in an Azure region, they are bare metal hardware. They get provisioned into Azure Resource Manager and assigned to product teams. Some go to VM SKUs. Some go to Azure AI Foundry.
+Once that happens, rational customers hoard.
 
-Within AI Foundry, that capacity gets split between PTU (provisioned, committed) and TPM (pay-as-you-go, on-demand). Because PTU is more commercially viable for Azure (committed revenue, predictable utilization from Microsoft's perspective), PTU gets the allocation. TPM gets what is left, which in many regions is zero.
+Azure's own documentation makes the incentive clear: if you scale down or delete a provisioned deployment, the capacity is released and there is no guarantee you will get it back later.
 
-This means the shortage customers experience is not just a GPU supply problem. It is a prioritization decision. The hardware exists. The allocation went to PTU.
+That single rule changes behavior. Capacity stops behaving like cloud elasticity and starts behaving like scarce inventory.
 
-## The 6% problem
-
-Based on my analysis across enterprise customers, single-digit utilization is common in early enterprise AI deployments. Approximately 6% is a representative midpoint from what I see in practice.
-
-The math: most enterprise teams work roughly 9 to 5, Monday through Friday. That is 40 hours out of 168 hours in a week, or about 24% of available time. Within those working hours, AI workloads are not running every second. Inference requests are bursty, not continuous. A realistic estimate of actual token consumption against reserved capacity lands around 6%.
-
-That means 94% of the capacity enterprises are paying for sits idle. Not because they overprovisioned by accident, because the alternative (releasing PTU and hoping to get it back later) is worse.
-
-Azure's own documentation confirms the trap: "Scaling down or deleting a deployment releases capacity. There is no guarantee that the capacity is available if the deployment is scaled up or re-created later."
-
-Release your PTU and you might never get it back. So you hoard.
+This creates a control plane vs data plane mismatch. Capacity is allocated based on reservation, not actual usage. When those diverge, efficiency collapses.
 
 ## What PTU and TPM actually are
 
-For the CTO or business leader reading this who needs the fundamentals:
+For the business leader reading this who needs the short version:
 
-**PTU (Provisioned Throughput Units)** is reserved AI inference capacity. You commit to a throughput level and pay whether you use it or not. It gives you dedicated capacity, lower latency under load, and pricing guarantees for the commitment term.
+**PTU (Provisioned Throughput Units)** is committed inference capacity. You reserve throughput, pay for it whether you use it or not, and get more predictable performance and latency.
 
-**TPM (Tokens Per Minute, Standard deployment)** is pay-as-you-go. You pay per token consumed. No commitment. Scale up and down instantly. The cloud promise.
+**TPM (Tokens Per Minute, Standard deployment)** is the pay-as-you-go path. You pay per token consumed, stay on shared capacity, and accept throttling risk instead of commitment risk.
 
 | | PTU | TPM (Standard) |
 |---|---|---|
-| Pricing model | Fixed monthly/hourly commitment | Per-token consumption |
-| Minimum | 15 PTU (Global), 50 PTU (Regional) | None |
-| Shortest commitment | Hourly (at premium), 1-month reservation | None |
-| Capacity guarantee | Quota approved does not guarantee deployment will succeed | Shared pool, subject to throttling |
-| Unused capacity | Lost. Does not carry over. | You only pay for what you use. |
-| Cancel mid-term | Exchange/refund with $50K cap in 12-month window | No commitment to cancel |
+| Pricing model | Fixed hourly or reserved commitment | Per-token consumption |
+| Capacity model | Dedicated reserved throughput | Shared pool |
+| Best fit | Stable, high, predictable demand | Early, bursty, uncertain demand |
+| Main risk | Paying for idle capacity | Throttling or regional scarcity |
+| Main benefit | Predictability | Flexibility |
 
-The financial comparison at different utilization levels (GPT-4o class, 15 PTU minimum, ~51K TPM capacity):
+This is why the debate matters. PTU is not just another SKU. It changes the operating model.
 
-| Utilization | Standard Token Cost | PTU Reservation ($4,290/mo) | Overpay Factor |
+## The real economic problem
+
+The strongest argument against early PTU adoption is not ideological. It is mathematical.
+
+In early enterprise deployments, utilization is usually much lower than people expect. Teams work business hours. Many copilots are used intermittently. Pilots launch with optimistic forecasts and real traffic arrives in bursts.
+
+Across the enterprise patterns I see, single-digit utilization is common in the early phase. Approximately 6% is a representative midpoint, not a universal law.
+
+This is not a published benchmark, just a consistent pattern I see in early enterprise deployments.
+
+The math is straightforward. A team that actively uses a workload only during working hours is already using only a fraction of the week. If actual request volume inside those hours is bursty rather than continuous, the effective utilization of reserved throughput collapses fast.
+
+That is how you end up with a terrible but rational sentence: "We are barely using it, but we cannot give it back."
+
+Using a GPT-4o class example with a 15 PTU minimum and roughly 51K TPM of provisioned capacity, the economics look like this:
+
+| Utilization | Standard token cost | PTU reservation | Effective overpay |
 |---|---|---|---|
-| 100% | ~$3,856 | $4,290 | 1.1x (near break-even) |
-| 60% | ~$2,314 | $4,290 | 1.9x |
-| 25% | ~$964 | $4,290 | 4.5x |
-| 10% | ~$386 | $4,290 | 11.1x |
-| 6% | ~$242 | $4,290 | 17.7x |
+| 100% | ~$3,856 | $4,290/month | 1.1x |
+| 60% | ~$2,314 | $4,290/month | 1.9x |
+| 25% | ~$964 | $4,290/month | 4.5x |
+| 10% | ~$386 | $4,290/month | 11.1x |
+| 6% | ~$242 | $4,290/month | 17.7x |
 
-PTU only makes financial sense at very high sustained utilization, often north of 80-90% depending on model and pricing. At 6% utilization, you are paying 17.7 times what the tokens would cost on-demand. Most enterprises starting AI workloads are well below 60% in the first year.
+The exact break-even point varies by model, token mix, and reservation term. The decision shape does not. PTU only starts to look financially attractive when demand is both high and steady.
 
-## The chicken-and-egg problem
+That is why early PTU adoption so often turns into stranded cost.
 
-When customers ask me whether to buy PTU now or wait, here is the reality: there is no such thing as waiting. PTU capacity is gone within 24 hours after it is released because there is already a backlog in the queue. I do not know when more capacity for a specific model will be available in a specific region. It could be next month. It could be six months from now.
+## The allocation trap
 
-So the customer faces a risk decision:
+This is the part most public writing misses.
 
-- Buy PTU today and waste 94% of the bill each month until your workload grows into it?
-- Buy a fraction of your projected need and hope you do not hit 100% before more capacity appears?
-- Skip PTU entirely, use Standard deployment (TPM), and accept potential throttling and no latency guarantees?
-- Rearchitect your application to use smaller models for simple tasks and reserve the expensive models for complex ones?
+The question is not only, "Which pricing model is cheaper?" The harder question is, "Which model actually has usable capacity in my region, for my subscription, when I need it?"
 
-Every option is a gamble. None of them should be. This is what happens when capacity allocation favors committed revenue over customer flexibility.
+When Standard capacity is constrained and PTU becomes the only practical option, customers get pulled into a commitment model earlier than their workload maturity warrants.
 
-## Why this is happening: the infrastructure wall
+Once they secure PTU, they stop thinking like elastic cloud consumers and start thinking like holders of scarce inventory. Releasing capacity becomes risky. Over-reserving becomes understandable. Utilization drops. New customers face longer waits. The ecosystem gets less efficient with every rational local decision.
 
-This is not just an Azure problem. The entire industry is capacity constrained. Understanding why changes how you evaluate the decision.
+The second-order effect matters more than the first. As more customers over-reserve, effective capacity for everyone else decreases, even if total infrastructure grows.
 
-**$475 billion in CapEx, still not enough.** In 2026, the three major cloud providers plan to spend a combined $475-483 billion on infrastructure. Amazon: ~$200 billion. Alphabet: $175-185 billion. Microsoft: ~$98 billion annualized. Andy Jassy wrote in Amazon's 2025 shareholder letter (April 9, 2026): "We are not investing approximately $200 billion in capex in 2026 on a hunch." He also confirmed: "We still have capacity constraints that yield unserved demand."
+That is why I call this a market failure inside a cloud.
 
-**GPU supply is not the bottleneck anymore. Power is.** TSMC CEO C.C. Wei stated in the Q1 2026 earnings call (April 16, 2026) that the AI chip shortage is expected to last until at least 2027. New fabs take 2-3 years to build and "there are no shortcuts." AWS added 3.9 gigawatts of new power capacity in 2025 and is buying land next to nuclear plants. Northern Virginia data center projects are delayed 2-3 years because the local grid cannot provide the power.
+Nobody has to behave badly for the system to produce bad outcomes.
 
-**HBM memory is sold out through 2026.** Even if GPU production scales, the specialized high-bandwidth memory (HBM3e) required for AI accelerators is 100% reserved through December 2026. Samsung and SK Hynix raised HBM3E prices approximately 20% for 2026 deliveries.
+## When PTU actually makes sense
 
-**Costs are coming down, just not yet.** Alphabet reduced Gemini serving costs by 78% over 2025 (Sundar Pichai, Q4 2025 earnings, February 4, 2026). Microsoft's Maia 200 custom silicon delivers 30% better performance per dollar. Amazon's Trainium chips offer 30-40% better price-performance than comparable GPUs. The deflationary signal is real, which means locking in today's PTU price for 12 months carries pricing decay risk.
+PTU is not wrong. It is just easy to buy too early.
 
-## The supply chain nobody talks about in cloud procurement
+Choose PTU when most of these are true:
 
-Most CTOs evaluating PTU vs TPM think the constraint is GPU availability. The actual constraint chain is longer and more fragile than that.
+1. Demand is already proven in production.
+2. Your baseline traffic is high for most of the day.
+3. Latency predictability matters more than pure cost efficiency.
+4. You can measure sustained throughput, not just projected demand.
+5. You are prepared to operate spillover, retries, and utilization monitoring as first-class concerns.
 
-A GPU starts as sand. Silicon dioxide gets refined into ultra-pure silicon, grown into a crystal ingot, and sliced into wafers. Those wafers go through roughly 100 cycles of deposition, lithography, etching, and metrology before they become chips. The chips get stacked with high-bandwidth memory (HBM), packaged using advanced techniques like TSMC's CoWoS, and assembled into the GPU modules that end up in Azure data centers.
+Choose TPM first when most of these are true:
 
-Every step in that chain has a bottleneck. Here are the ones that matter for your AI procurement decision:
+1. The workload is new, seasonal, or still learning its traffic shape.
+2. Demand is spiky or heavily tied to business hours.
+3. You need flexibility more than deterministic latency.
+4. You are still testing prompts, model choice, or user adoption.
+5. You do not yet have enough real production data to size PTU with confidence.
 
-**Helium.** The semiconductor industry consumes 24% of the world's helium supply, the largest single sector. That share is projected to reach 30% by 2030. Helium is irreplaceable in chip manufacturing. It cools the EUV lithography machines that ASML builds (the only company that makes them). It provides the inert atmosphere for silicon crystal growth. It is used for vacuum leak detection at every fab. There is no substitute. Fabs carry approximately one week of on-site helium supply.
+The practical answer for many teams is hybrid: keep a measured PTU baseline only after usage is real, then route bursts or non-critical traffic to Standard deployments where available.
 
-Qatar produces 30-35% of the world's helium from the Ras Laffan complex. In early 2026, the Strait of Hormuz was closed following military operations. Iran attacked Qatar's largest LNG facility in March, damaging helium production lines. QatarEnergy declared force majeure. US helium distributors cut deliveries by 50%. The repair timeline for Ras Laffan is estimated at up to 5 years.
+## How this compares with AWS and GCP
 
-Taiwan sources 69% of its helium from Middle Eastern nations. South Korea sources 55%. Those are the countries where TSMC, Samsung, and SK Hynix fabricate and package the chips that become your GPUs.
+I hear from multi-cloud customers that Azure creates this scarcity dynamic more often than AWS Bedrock or GCP Vertex AI.
 
-Phil Kornbluth, a helium industry consultant, put it plainly: "There is a tsunami coming, but it is still a thousand miles offshore. Right now, it is still sunny on the beach."
+The broad pattern in public guidance is this:
 
-**TSMC concentration.** TSMC fabricates approximately 90% of the world's leading-edge chips (sub-5nm). All Nvidia Blackwell GPUs are manufactured there. All of this production is in Taiwan.
-
-**HBM memory.** SK Hynix and Samsung produce over 95% of the world's high-bandwidth memory. Without HBM3e, GPUs cannot be completed. Production is 100% reserved through December 2026. Prices are up approximately 20%.
-
-**The chain reaction.** Qatar gas fields feed helium to East Asian fabs. Those fabs produce the wafers that become GPUs. Those GPUs go to data centers that need gigawatts of power the grid cannot provide. Those data centers run the Azure AI Foundry capacity that gets split between PTU and TPM. Every constraint upstream tightens the capacity downstream.
-
-When someone tells you PTU is sold out in your region, this is the chain they are not explaining. It is not just a software allocation decision. It is sand and helium and power and memory and packaging and shipping, all of it constrained simultaneously.
-
-## How AWS and GCP handle this differently
-
-I hear from customers who use multiple clouds that AWS and GCP do not create the same scarcity dynamic. The research confirms meaningful structural differences.
-
-| Feature | Azure PTU | AWS Bedrock | GCP Vertex AI |
+| Feature | Azure PTU / Standard | AWS Bedrock | GCP Vertex AI |
 |---|---|---|---|
-| Default path | Standard (pay-per-token) exists, often has zero allocation | On-Demand is always available | Pay-as-you-go is always available |
-| Shortest commitment | Hourly (at premium) or 1-month reservation | No commitment required for on-demand | 1 week |
-| Capacity guarantee | "Quota does not guarantee capacity." Sell-outs documented. | On-demand is the baseline, always available | "Minutes to weeks" fulfillment |
-| Overage handling | 429 errors (throttled, must configure spillover) | N/A (on-demand is baseline) | Auto-billed as pay-as-you-go |
-| Unused capacity | Lost. No carry-over. | Lost during commitment | Lost. Fixed cost. |
-| Model switching | Full flexibility across models within deployment type | Must buy new provisioned throughput per model | Switch within same publisher mid-term |
+| Default mental model | Mix of Standard and provisioned | On-demand first | Pay-as-you-go first |
+| Commitment option | PTU reservations | Provisioned throughput | Provisioned throughput |
+| Main enterprise question | Is Standard capacity usable in my region? | Do I need provisioned capacity yet? | Do I need a commitment yet? |
 
-The critical difference: AWS defaults to on-demand and treats provisioned throughput as an optional optimization for high-volume workloads. GCP offers 1-week commitments with automatic overage billing. In practice, Azure customers experience pay-as-you-go scarcity far more frequently than on AWS or GCP.
+I cannot verify the internal allocation logic of other hyperscalers. I can verify that Azure customers I work with hit the "capacity first, economics second" conversation more often than they expect.
 
-I cannot verify whether AWS and GCP explicitly prioritize on-demand over provisioned in their internal allocation. What I can verify from their public documentation is that on-demand availability is their baseline, not an afterthought.
+That distinction matters. The best pricing model on paper is irrelevant if it is not practically available.
 
 ## My position
 
-I advocate for TPMs. I do this internally at Microsoft, and I will say it here.
+I favor TPM as the default starting point for most enterprise AI workloads.
 
-The promise of the cloud is to scale what you need and give back the rest. PTU breaks that promise when capacity sits 94% idle because customers are afraid to release it.
+The cloud promise is not that everything is free or infinitely elastic. The promise is that you can start small, observe real demand, and scale commitment only after the workload earns it.
 
-If my analysis is correct and most enterprise PTU deployments run at approximately 6% utilization, then the majority of provisioned AI capacity in Azure is being wasted. That is bad for customers and bad for the ecosystem. Capacity that sits idle in one customer's PTU allocation could serve another customer's on-demand request.
+PTU breaks that sequence when customers are pushed into reservation before they have utilization.
 
-I understand why PTU exists from Azure's perspective. Committed revenue is predictable. Capacity planning is easier when customers pre-commit. The commercial incentive is real.
+Customers are not the problem. Product teams are not the problem. The incentive structure is the problem.
 
-I also understand why customers buy PTU even at 6% utilization. The alternative is worse. If releasing PTU means losing access to AI capacity entirely, hoarding is rational.
+If releasing capacity is risky, hoarding is rational.
 
-The system is the problem, not the customers or the product team. The incentives are misaligned.
+If utilization is low, PTU becomes stranded cost.
+
+If enough customers do that at once, the system gets worse for everyone else.
 
 ## What I would change
 
-If I could influence the model:
+If I could influence the model, I would change four things:
 
-1. **Guarantee TPM allocation.** Every region should have a minimum percentage of AI capacity reserved for on-demand. Forcing 100% of capacity to PTU punishes customers who follow the cloud's consumption model.
-2. **Allow PTU burst-down.** If your utilization is below 30% for a billing period, the unused portion should credit toward future months or convert to on-demand tokens. Wasted capacity benefits nobody.
-3. **Publish regional utilization data.** Let customers see aggregate PTU utilization by region. If the industry average is 6%, customers deserve to know before committing.
-4. **Shorten minimum commitments.** GCP offers 1-week terms. Azure's minimum meaningful commitment is 1 month. In a market where model capabilities and pricing change quarterly, shorter terms reduce risk.
-
-Change my mind.
+1. **Reserve a real floor for Standard capacity.** Every region should keep some meaningful percentage of AI capacity available for pay-as-you-go usage.
+2. **Make PTU easier to step down.** If utilization stays low, customers should have a cleaner path to reduce committed capacity without effectively exiting the market.
+3. **Publish better utilization signals.** Customers should be able to see enough aggregate data to judge whether commitment is justified.
+4. **Shorten commitment friction.** In a market where model pricing and capability move fast, long commitment windows create unnecessary lock-in risk.
 
 ## What to do this week
 
-If you are a CTO or business leader evaluating AI procurement on Azure:
+If you are a CTO, platform lead, or procurement owner evaluating Azure AI capacity, do this now:
 
-1. **Do not buy PTU without 3 months of production token data.** If you do not have usage history, start with Standard deployment and measure. The 17.7x overpay at 6% utilization is real.
-2. **Calculate your actual utilization.** Not projected. Actual. Hours of active inference divided by hours in the month. If it is below 30%, PTU is not saving you money.
-3. **Ask your Azure account team about TPM allocation in your region.** If the answer is zero, ask why. Ask when it will be available. Document the answer.
-4. **Evaluate multi-cloud for AI workloads.** If Azure cannot provide on-demand capacity for your workload, AWS Bedrock and GCP Vertex AI offer on-demand as the default path. This is not disloyalty. This is procurement.
-5. **Rearchitect before you reserve.** Can simpler tasks use a smaller model (GPT-4o-mini instead of GPT-4o)? Can batch inference run overnight at lower cost? Reduce the throughput you need before committing to throughput you will waste.
-6. **Watch the deflationary signals.** Alphabet cut serving costs 78% in one year. Microsoft's Maia 200 and Amazon's Trainium are both delivering 30%+ better performance per dollar. Locking in today's PTU price for 12 months means paying 2025 rates on 2026 silicon.
+1. **Do not buy PTU on forecast alone.** Use real token data wherever possible.
+2. **Calculate utilization honestly.** Measure active throughput against total reserved time, not against the business case slide.
+3. **Ask a capacity question before a pricing question.** Is Standard deployment actually usable in your target region and model family?
+4. **Separate baseline from burst.** Do not reserve peak demand if most of your traffic is intermittent.
+5. **Treat PTU as an architectural commitment.** This is not just billing. It affects routing, failover, monitoring, and release decisions.
+6. **Revisit the decision often.** Model prices, throughput ratios, and capacity conditions change faster than traditional infrastructure contracts.
+7. **Model your failure mode.** What happens when PTU saturates or TPM throttles? Design for it.
 
-The AI infrastructure shortage is real. The $475 billion in hyperscaler CapEx proves it. The question is not whether capacity will eventually arrive. It will. The question is whether the pricing and allocation model serves customers during the gap.
+The AI infrastructure shortage is real. Capacity constraints are real. None of that changes the core point.
 
-Right now, it serves committed revenue. The cloud promise says it should serve workloads.
+A cloud platform should not teach customers to hoard.
+
+If the safest behavior is to hold unused capacity because reacquiring it is too risky, the elasticity model is no longer working the way customers think it is.
+
+If your safest move is to hold unused capacity, is that still cloud?
 
 ---
 
